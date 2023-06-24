@@ -9,9 +9,9 @@ $ make
 ```
 
 ## CXGame application:
-Human vs Computer.  In the connectx/ directory run:
+Human vs Computer.  In the build/ directory run:
 ```
-$ java -cp ".." connectx.CXGame 6 7 4 connectx.L0.L0
+$ java connectx.CXGame 6 7 4 connectx.L0.L0
 ```
 
 Computer vs Computer. In the build/ directory run:
