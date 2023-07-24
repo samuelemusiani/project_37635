@@ -2,13 +2,11 @@
 input="./board_configurations.txt"
 OUTPUT=""
 
-rm -f ./tmp
-
 while IFS= read -r line
 do
   echo "Game $line":
   tmp_out=$(java -jar ./build/libs/connectx.jar ${line} connectx.L0.L0 connectx.L1.L1)
-  echo $tmp_out
+  echo "$tmp_out"
   OUTPUT+=$tmp_out
   OUTPUT+='\n'
 done < "$input"
