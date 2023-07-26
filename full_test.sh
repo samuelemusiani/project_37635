@@ -40,14 +40,18 @@ PLAYER1=${*:$#}
 OUTPUT=""
 while IFS= read -r line
 do
-  tmp_out=$(java -jar ./build/libs/connectx.jar ${line} connectx.${PLAYER0}.${PLAYER0} connectx.${PLAYER1}.${PLAYER1})
-  
   if [[ $VERBOSE  = true ]]; then
     echo "Game $line":
+  fi
+
+  tmp_out=$(java -jar ./build/libs/connectx.jar ${line} connectx.${PLAYER0}.${PLAYER0} connectx.${PLAYER1}.${PLAYER1})
+
+  if [[ $VERBOSE  = true ]]; then
     echo "$tmp_out"
   else 
     echo -n "-"
   fi
+
 
   OUTPUT+=$tmp_out
   OUTPUT+='\n'
