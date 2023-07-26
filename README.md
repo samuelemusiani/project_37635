@@ -41,3 +41,13 @@ $ java -jar build/libs/connectx.jar 6 7 4 connectx.L0.L0 connectx.L1.L1 -v -t 1 
 
 In `gradle.build` the main class is specified, if you want another class to run
 as main (for example the CXGame) you can simply uncomment the commented line.
+
+## full_test script
+There is a bash script with the name `full_test.sh` that allow to use the 
+`CXPlayerTester` with all the board configurations stored in `board_configurations.txt`.
+The use is pretty simple: you just need to pass two player names in the command line
+and the script will do the rest.
+```sh
+./full_test.sh L0 L1
+```
+If you want the verbose output just use the '-v' flag.
