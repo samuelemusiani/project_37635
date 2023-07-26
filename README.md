@@ -50,4 +50,4 @@ and the script will do the rest.
 ```sh
 ./full_test.sh L0 L1
 ```
-If you want the verbose output just use the '-v' flag.
+If you want the verbose output just use the `-v` flag.
