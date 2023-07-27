@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeoutException;
 
 /*
- * AlphaBeta implementation with different evaluation for the position
+ * AlphaBeta implementation with different evaluation for the final position
  */
 public class L5 implements CXPlayer {
   private Random rand;
@@ -128,7 +128,7 @@ public class L5 implements CXPlayer {
 
   private int evaluate(CXBoard B) {
     if (B.gameState() == myWin)
-      return (B.numOfFreeCells() + 1) / 2 + 5;
+      return (B.numOfFreeCells() + 1) / 2 + 5; // To avoid 0 meaning win and draw
     else if (B.gameState() == yourWin)
       return -(B.numOfFreeCells() / 2) - 5;
     else
