@@ -10,10 +10,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeoutException;
 
 /*
- * NegaMax implementation
- * The algoriths search all the game tree until he founds a winning move or
- * runs out of time. No memorization is used, so every time the full tree is 
- * scanned.
+ * MinMax implementation (to test bugs on negmax)
  */
 public class L3 implements CXPlayer {
   private Random rand;
