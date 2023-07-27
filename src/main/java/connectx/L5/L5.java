@@ -39,7 +39,7 @@ public class L5 implements CXPlayer {
   public int selectColumn(CXBoard B) {
     START = System.currentTimeMillis(); // Save starting time
 
-    Integer[] L = B.getAvailableColumns();
+    Integer[] L = reorderMoves(B.getAvailableColumns());
     int save = L[rand.nextInt(L.length)]; // Save a random column
 
     try {
@@ -59,13 +59,13 @@ public class L5 implements CXPlayer {
     checktime();
     if (B.gameState() == CXGameState.OPEN) {
       int max = (int) -1.5 * B.numOfFreeCells();
-      Integer[] moves = B.getAvailableColumns();
+      Integer[] moves = reorderMoves(B.getAvailableColumns()); 
       int move = moves[0];
 
       for (int i : moves) {
         B.markColumn(i);
         int score = alphaBetaMin(B, max, -max, depth - 1);
-        System.out.println("Score: " + score);
+        // System.out.println("Score: " + score);
         B.unmarkColumn();
         if (score > max) {
           max = score;
@@ -73,7 +73,8 @@ public class L5 implements CXPlayer {
           move = i;
         }
       }
-      System.out.println("Max: " + max);
+      // System.out.println("Max: " + max);
+      // System.out.println("Move: " + move);
       return move;
     } else
       throw new TimeoutException();
@@ -85,7 +86,7 @@ public class L5 implements CXPlayer {
       if (depth == 0)
         return alpha;
 
-      Integer[] moves = B.getAvailableColumns();
+      Integer[] moves = reorderMoves(B.getAvailableColumns()); 
 
       for (int i : moves) {
         B.markColumn(i);
@@ -127,11 +128,27 @@ public class L5 implements CXPlayer {
 
   private int evaluate(CXBoard B) {
     if (B.gameState() == myWin)
-      return (B.numOfFreeCells() + 1)/2;
+      return (B.numOfFreeCells() + 1) / 2 + 5;
     else if (B.gameState() == yourWin)
-      return -(B.numOfFreeCells() / 2);
+      return -(B.numOfFreeCells() / 2) - 5;
     else
       return 0;
+  }
+
+  private Integer[] reorderMoves(Integer[] m) {
+    int l = m.length;
+    Integer[] r = new Integer[l];
+
+    int delta = 0;
+
+    for (int i = 0; i < l; i++) {
+      if (i % 2 == 1)
+        delta++;
+
+      r[i] = m[l / 2 + (i % 2 == 0 ? 1 : -1) * delta];
+    }
+
+    return r;
   }
 
   public String playerName() {
