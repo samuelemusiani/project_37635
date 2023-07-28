@@ -18,7 +18,6 @@ public class L7 implements CXPlayer {
   private int TIMEOUT;
   private long START;
   private HashMap<Long, Integer> table; // Converto to array of char??
-  private String moves_made;
 
   public L7() {
   }
@@ -29,7 +28,6 @@ public class L7 implements CXPlayer {
     TIMEOUT = timeout_in_secs;
 
     table = new HashMap<Long, Integer>();
-    moves_made = "";
   }
 
   /**
@@ -45,18 +43,12 @@ public class L7 implements CXPlayer {
     Integer[] L = reorderMoves(B.getAvailableColumns());
     int save = L[0];
 
-    CXCell last_move = B.getLastMove();
-    if (last_move != null)
-      moves_made += last_move.j;
-
     try {
       // System.err.println("Position: " + convertPosition(B));
-      int move = move_maxi(B, moves_made, 10000000);
-      moves_made += move;
+      int move = move_maxi(B, 10000000);
       return move;
     } catch (TimeoutException e) {
       System.err.println("Timeout!!! Random column selected");
-      moves_made += save;
       return save;
     }
   }
@@ -66,7 +58,7 @@ public class L7 implements CXPlayer {
       throw new TimeoutException();
   }
 
-  private int move_maxi(CXBoard B, String moves, int depth) throws TimeoutException {
+  private int move_maxi(CXBoard B, int depth) throws TimeoutException {
     checktime();
     if (B.gameState() == CXGameState.OPEN) {
       int alpha = (int) -(1.5 * B.numOfFreeCells());
@@ -78,14 +70,13 @@ public class L7 implements CXPlayer {
       for (int i : possible_moves) {
         B.markColumn(i);
         long converted_position = convertPosition(B);
-        moves += i;
 
         // System.err.println("Move: " + i);
 
         Integer score = table.get(converted_position);
         if (score == null) {
           // System.err.println("[" + alpha + ", " + beta + "]");
-          score = alphaBetaMin(B, alpha, beta, moves, depth - 1);
+          score = alphaBetaMin(B, alpha, beta, depth - 1);
         }
 
         if (score > alpha) {
@@ -94,7 +85,6 @@ public class L7 implements CXPlayer {
           move = i;
         }
         B.unmarkColumn();
-        moves = moves.substring(0, moves.length() - 1); // I don't like this
         // System.err.println("Score: " + score);
       }
       // System.err.println("Alpha: " + alpha);
@@ -103,7 +93,7 @@ public class L7 implements CXPlayer {
       throw new TimeoutException();
   }
 
-  private int alphaBetaMax(CXBoard B, int alpha, int beta, String moves, int depth) throws TimeoutException {
+  private int alphaBetaMax(CXBoard B, int alpha, int beta, int depth) throws TimeoutException {
     checktime();
     if (B.gameState() == CXGameState.OPEN) {
       // if (depth == 0)
@@ -114,15 +104,13 @@ public class L7 implements CXPlayer {
       for (int i : possible_moves) {
         B.markColumn(i);
         long converted_position = convertPosition(B);
-        moves += i;
         Integer score = table.get(converted_position);
         if (score == null) {
-          score = alphaBetaMin(B, alpha, beta, moves, depth - 1);
+          score = alphaBetaMin(B, alpha, beta, depth - 1);
         }
 
         if (score >= beta) {
           B.unmarkColumn();
-          moves = moves.substring(0, moves.length() - 1); // I don't like this
           return beta;
         }
 
@@ -131,14 +119,13 @@ public class L7 implements CXPlayer {
           table.put(converted_position, score);
         }
         B.unmarkColumn();
-        moves = moves.substring(0, moves.length() - 1); // I don't like this
       }
       return alpha;
     } else
       return evaluate(B);
   }
 
-  private int alphaBetaMin(CXBoard B, int alpha, int beta, String moves, int depth) throws TimeoutException {
+  private int alphaBetaMin(CXBoard B, int alpha, int beta, int depth) throws TimeoutException {
     checktime();
     if (B.gameState() == CXGameState.OPEN) {
       // if (depth == 0)
@@ -148,10 +135,8 @@ public class L7 implements CXPlayer {
 
       for (int i : possible_moves) {
         B.markColumn(i);
-        moves += i;
-        int score = alphaBetaMax(B, alpha, beta, moves, depth - 1);
+        int score = alphaBetaMax(B, alpha, beta, depth - 1);
         B.unmarkColumn();
-        moves = moves.substring(0, moves.length() - 1); // I don't like this
         if (score <= alpha)
           return alpha;
 
