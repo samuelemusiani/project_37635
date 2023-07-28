@@ -16,7 +16,7 @@
  *  GNU General Public License for more details; see <https://www.gnu.org/licenses/>.
  */
 
-package connectx.L0;
+package connectx.Players;
 
 import connectx.CXPlayer;
 import connectx.CXBoard;

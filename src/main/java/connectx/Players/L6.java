@@ -1,4 +1,4 @@
-package connectx.L6;
+package connectx.Players;
 
 import connectx.CXPlayer;
 import connectx.CXBoard;

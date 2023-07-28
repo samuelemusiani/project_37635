@@ -1,4 +1,4 @@
-package connectx.L5;
+package connectx.Players;
 
 import connectx.CXPlayer;
 import connectx.CXBoard;
@@ -10,16 +10,16 @@ import java.util.Arrays;
 import java.util.concurrent.TimeoutException;
 
 /*
- * AlphaBeta implementation with different evaluation for the final position
+ * AlphaBeta implementation
  */
-public class L5 implements CXPlayer {
+public class L4 implements CXPlayer {
   private Random rand;
   private CXGameState myWin;
   private CXGameState yourWin;
   private int TIMEOUT;
   private long START;
 
-  public L5() {
+  public L4() {
   }
 
   public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
@@ -39,7 +39,7 @@ public class L5 implements CXPlayer {
   public int selectColumn(CXBoard B) {
     START = System.currentTimeMillis(); // Save starting time
 
-    Integer[] L = reorderMoves(B.getAvailableColumns());
+    Integer[] L = B.getAvailableColumns();
     int save = L[rand.nextInt(L.length)]; // Save a random column
 
     try {
@@ -58,9 +58,9 @@ public class L5 implements CXPlayer {
   private int move_maxi(CXBoard B, int depth) throws TimeoutException {
     checktime();
     if (B.gameState() == CXGameState.OPEN) {
-      int alpha = (int) -(1.5 * B.numOfFreeCells());
+      int alpha = -1000000000;
       int beta = -alpha;
-      Integer[] moves = reorderMoves(B.getAvailableColumns()); 
+      Integer[] moves = B.getAvailableColumns();
       int move = moves[0];
 
       for (int i : moves) {
@@ -75,7 +75,6 @@ public class L5 implements CXPlayer {
         }
       }
       // System.out.println("Max: " + max);
-      // System.out.println("Move: " + move);
       return move;
     } else
       throw new TimeoutException();
@@ -87,7 +86,7 @@ public class L5 implements CXPlayer {
       if (depth == 0)
         return alpha;
 
-      Integer[] moves = reorderMoves(B.getAvailableColumns()); 
+      Integer[] moves = B.getAvailableColumns();
 
       for (int i : moves) {
         B.markColumn(i);
@@ -129,30 +128,14 @@ public class L5 implements CXPlayer {
 
   private int evaluate(CXBoard B) {
     if (B.gameState() == myWin)
-      return (B.numOfFreeCells() + 1) / 2 + 5; // To avoid 0 meaning win and draw
+      return 1;
     else if (B.gameState() == yourWin)
-      return -(B.numOfFreeCells() / 2) - 5;
+      return -1;
     else
       return 0;
   }
 
-  private Integer[] reorderMoves(Integer[] m) {
-    int l = m.length;
-    Integer[] r = new Integer[l];
-
-    int delta = 0;
-
-    for (int i = 0; i < l; i++) {
-      if (i % 2 == 1)
-        delta++;
-
-      r[i] = m[l / 2 + (i % 2 == 0 ? 1 : -1) * delta];
-    }
-
-    return r;
-  }
-
   public String playerName() {
-    return "L5";
+    return "L4";
   }
 }
