@@ -29,7 +29,7 @@ public class L6 implements CXPlayer {
     rand = new Random(System.currentTimeMillis());
     myWin = first ? CXGameState.WINP1 : CXGameState.WINP2;
     yourWin = first ? CXGameState.WINP2 : CXGameState.WINP1;
-    TIMEOUT = first ? 5 : timeout_in_secs;
+    TIMEOUT = timeout_in_secs;
 
     table = new HashMap<String, Integer>();
     moves_made = "";
