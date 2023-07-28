@@ -58,17 +58,18 @@ public class L4 implements CXPlayer {
   private int move_maxi(CXBoard B, int depth) throws TimeoutException {
     checktime();
     if (B.gameState() == CXGameState.OPEN) {
-      int max = -1000000;
+      int alpha = -1000000000;
+      int beta = -alpha;
       Integer[] moves = B.getAvailableColumns();
       int move = moves[0];
 
       for (int i : moves) {
         B.markColumn(i);
-        int score = alphaBetaMin(B, max, -max, depth - 1);
+        int score = alphaBetaMin(B, alpha, beta, depth - 1);
         // System.out.println("Score: " + score);
         B.unmarkColumn();
-        if (score > max) {
-          max = score;
+        if (score > alpha) {
+          alpha = score;
           // System.out.println("Max_int: " + max);
           move = i;
         }
