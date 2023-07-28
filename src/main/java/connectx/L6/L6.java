@@ -29,9 +29,8 @@ public class L6 implements CXPlayer {
     rand = new Random(System.currentTimeMillis());
     myWin = first ? CXGameState.WINP1 : CXGameState.WINP2;
     yourWin = first ? CXGameState.WINP2 : CXGameState.WINP1;
-    TIMEOUT = timeout_in_secs;
+    TIMEOUT = first ? 5 : timeout_in_secs;
 
-    int dim = N * (M + 1);
     table = new HashMap<String, Integer>();
     moves_made = "";
   }
@@ -55,7 +54,7 @@ public class L6 implements CXPlayer {
       moves_made += last_move.j;
 
     try {
-      int move = move_maxi(B, moves_made, 10000);
+      int move = move_maxi(B, moves_made, 10000000);
       moves_made += move;
       return move;
     } catch (TimeoutException e) {
@@ -73,35 +72,34 @@ public class L6 implements CXPlayer {
   private int move_maxi(CXBoard B, String moves, int depth) throws TimeoutException {
     checktime();
     if (B.gameState() == CXGameState.OPEN) {
-      int max = (int) -1.5 * B.numOfFreeCells();
-      // int max = -100000000;
+      int alpha = (int) -(1.5 * B.numOfFreeCells());
+      int beta = -alpha;
       Integer[] possible_moves = reorderMoves(B.getAvailableColumns());
+      // System.err.println("Possible_moves:" + Arrays.toString(possible_moves));
       int move = possible_moves[0];
 
-      System.out.println("Moves: " + moves);
       for (int i : possible_moves) {
         B.markColumn(i);
         moves += i;
-        int score;
-        if (table.get(moves) != null) {
-          score = table.get(moves);
-          System.out.println("Hit: " + score);
+
+        // System.err.println("Move: " + i);
+
+        Integer score = table.get(moves);
+        if (score == null) {
+          // System.err.println("[" + alpha + ", " + beta + "]");
+          score = alphaBetaMin(B, alpha, beta, moves, depth - 1);
         }
-        else {
-          score = alphaBetaMin(B, max, -max, moves, depth - 1);
-        }
-        // System.out.println("Score: " + score);
-        B.unmarkColumn();
-        moves = moves.substring(0, moves.length() - 1); // I don't like this
-        if (score > max) {
-          max = score;
+
+        if (score > alpha) {
+          alpha = score;
           table.put(moves, score);
-          // System.out.println("Max_int: " + max);
           move = i;
         }
+        B.unmarkColumn();
+        moves = moves.substring(0, moves.length() - 1); // I don't like this
+        // System.err.println("Score: " + score);
       }
-      System.out.println("Max: " + max);
-      // System.out.println("Move: " + move);
+      // System.err.println("Alpha: " + alpha);
       return move;
     } else
       throw new TimeoutException();
@@ -110,31 +108,31 @@ public class L6 implements CXPlayer {
   private int alphaBetaMax(CXBoard B, int alpha, int beta, String moves, int depth) throws TimeoutException {
     checktime();
     if (B.gameState() == CXGameState.OPEN) {
-      if (depth == 0)
-        return alpha;
+      // if (depth == 0)
+      // return alpha;
 
       Integer[] possible_moves = reorderMoves(B.getAvailableColumns());
 
       for (int i : possible_moves) {
         B.markColumn(i);
         moves += i;
-        int score;
-        if (table.get(moves) != null) {
-          score = table.get(moves);
-          // System.out.println("Hit: " + score);
-        }
-        else {
+        Integer score = table.get(moves);
+        if ( score == null) {
           score = alphaBetaMin(B, alpha, beta, moves, depth - 1);
         }
-        B.unmarkColumn();
-        moves = moves.substring(0, moves.length() - 1); // I don't like this
-        if (score >= beta)
+
+        if (score >= beta) {
+          B.unmarkColumn();
+          moves = moves.substring(0, moves.length() - 1); // I don't like this
           return beta;
+        }
 
         if (score > alpha) {
           alpha = score;
           table.put(moves, score);
         }
+        B.unmarkColumn();
+        moves = moves.substring(0, moves.length() - 1); // I don't like this
       }
       return alpha;
     } else
@@ -144,8 +142,8 @@ public class L6 implements CXPlayer {
   private int alphaBetaMin(CXBoard B, int alpha, int beta, String moves, int depth) throws TimeoutException {
     checktime();
     if (B.gameState() == CXGameState.OPEN) {
-      if (depth == 0)
-        return beta;
+      // if (depth == 0)
+      // return beta;
 
       Integer[] possible_moves = B.getAvailableColumns();
 
