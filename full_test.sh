@@ -44,7 +44,7 @@ do
     echo "Game $line":
   fi
 
-  tmp_out=$(java -jar ./build/libs/connectx.jar ${line} connectx.${PLAYER0}.${PLAYER0} connectx.${PLAYER1}.${PLAYER1})
+  tmp_out=$(java -jar ./build/libs/connectx.jar ${line} connectx.Players.${PLAYER0} connectx.Players.${PLAYER1})
 
   if [[ $VERBOSE  = true ]]; then
     echo "$tmp_out"
