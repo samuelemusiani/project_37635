@@ -22,6 +22,10 @@ public class Evaluator0 implements CXPlayer {
 
   private int evaPositionalMatrix[][];
 
+  // Heuristic tester
+  private int divergence;
+  private int count_heuristic;
+
   public Evaluator0() {
   }
 
@@ -52,6 +56,9 @@ public class Evaluator0 implements CXPlayer {
     for (int i = 0; i < M; i++) {
       System.err.println(Arrays.toString(evaPositionalMatrix[i]));
     }
+
+    divergence = 0;
+    count_heuristic = 0;
   }
 
   /**
@@ -69,11 +76,33 @@ public class Evaluator0 implements CXPlayer {
 
     try {
       // System.err.println("Position: " + convertPosition(B));
-      int move = move_maxi(B, 7);
+      int move = move_maxi(B, 8);
+      System.err.println("Heuristic divergence:" + (double) divergence / count_heuristic);
       return move;
     } catch (TimeoutException e) {
       System.err.println("Timeout!!! Random column selected");
       return save;
+    }
+  }
+
+  private void printTable(CXBoard B) {
+    for (int i = 0; i < B.M; i++) {
+      for (int j = 0; j < B.N; j++) {
+        switch (B.cellState(i, j)) {
+          case FREE:
+            System.err.print("0 ");
+            break;
+
+          case P1:
+            System.err.print("1 ");
+            break;
+
+          case P2:
+            System.err.print("2 ");
+            break;
+        }
+      }
+      System.err.println();
     }
   }
 
@@ -102,7 +131,13 @@ public class Evaluator0 implements CXPlayer {
           // System.err.println("[" + alpha + ", " + beta + "]");
           score = alphaBetaMin(B, alpha, beta, depth);
           System.err.println("Score: " + score);
-          System.err.println("Evaluation: " + evaluate(B));
+          int eval = evaluate(B);
+          System.err.println("Evaluation: " + eval);
+          divergence += Math.abs(score - eval);
+          count_heuristic++;
+
+          if (Math.abs(score - eval) > 4)
+            printTable(B);
         }
 
         if (score > alpha) {
@@ -181,13 +216,11 @@ public class Evaluator0 implements CXPlayer {
       for (int j = 0; j < B.N; j++) {
         switch (B.cellState(B.M - i - 1, j)) {
           case P1:
-              sum += am_i_fist ? evaPositionalMatrix[i][j] :
-                -evaPositionalMatrix[i][j];
+            sum += am_i_fist ? evaPositionalMatrix[i][j] : -evaPositionalMatrix[i][j];
             break;
 
           case P2:
-              sum += am_i_fist ? -evaPositionalMatrix[i][j] :
-                evaPositionalMatrix[i][j];
+            sum += am_i_fist ? -evaPositionalMatrix[i][j] : evaPositionalMatrix[i][j];
             break;
 
           case FREE:
@@ -285,12 +318,14 @@ public class Evaluator0 implements CXPlayer {
         }
       }
       if (found_player) {
-        int tmp = (int) Math.pow(1.2, count);
+        int tmp = (int) count * count / 2;
         if (count + count_free < B.X)
-          tmp /= 2;
+          tmp /= 3;
         sum += tmp * (player != am_i_fist ? 1 : -1);
       }
     }
+
+    // Diagonal check??
 
     return sum;
   }
