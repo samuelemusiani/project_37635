@@ -99,7 +99,7 @@ public class L8 implements CXPlayer {
     if (am_i_fist)
       depth = Math.max(previous_search_depth - 2, 2);
     else
-      depth = Math.max(previous_search_depth - 1, 1);
+      depth = Math.max(previous_search_depth - 2, 1);
 
     search_not_finished = true;
     while (search_not_finished) {
