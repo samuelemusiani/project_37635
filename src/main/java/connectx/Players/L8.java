@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.concurrent.TimeoutException;
 
 /*
- * L7 + bassic euristic  + iterative deeping and move reordering from previous iteration
+ * L7 + bassic euristic  + iterative deepening and move reordering from previous iteration
  */
 public class L8 implements CXPlayer {
   private CXGameState myWin;
@@ -26,7 +26,7 @@ public class L8 implements CXPlayer {
   private boolean am_i_fist;
 
 
-  // Iterative deeping
+  // Iterative deepening
   private int current_best_move;
   private boolean search_not_finished;
   private int previous_search_depth;
@@ -81,7 +81,7 @@ public class L8 implements CXPlayer {
 
     try {
       // System.err.println("Position: " + convertPosition(B));
-      return iterativeDeeping(B); // Keeps going untile a TimeoutException
+      return iterativeDeepening(B); // Keeps going untile a TimeoutException
     } catch (TimeoutException e) {
       // System.err.println("Timeout!!! Random column selected");
       System.err.println("Timeout! Fall back on previous best move");
@@ -94,7 +94,7 @@ public class L8 implements CXPlayer {
       throw new TimeoutException();
   }
 
-  private int iterativeDeeping(CXBoard B) throws TimeoutException {
+  private int iterativeDeepening(CXBoard B) throws TimeoutException {
     int depth = Math.max(previous_search_depth - 1, 1);
     search_not_finished = true;
     while (search_not_finished) {
@@ -104,6 +104,7 @@ public class L8 implements CXPlayer {
       // System.err.println("Current_best_move: " + current_best_move);
       previous_search_depth = depth;
       depth++;
+      search_not_finished = depth < 3 * B.numOfFreeCells();
     }
     return current_best_move;
   }
