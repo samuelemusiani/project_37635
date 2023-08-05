@@ -95,7 +95,12 @@ public class L8 implements CXPlayer {
   }
 
   private int iterativeDeepening(CXBoard B) throws TimeoutException {
-    int depth = Math.max(previous_search_depth - 1, 1);
+    int depth;
+    if (am_i_fist)
+      depth = Math.max(previous_search_depth - 2, 2);
+    else
+      depth = Math.max(previous_search_depth - 1, 1);
+
     search_not_finished = true;
     while (search_not_finished) {
       System.err.println("Depth: " + depth);
@@ -103,7 +108,7 @@ public class L8 implements CXPlayer {
       current_best_move = move_maxi(B, depth);
       // System.err.println("Current_best_move: " + current_best_move);
       previous_search_depth = depth;
-      depth++;
+      depth += 2;
       search_not_finished = depth < 3 * B.numOfFreeCells();
     }
     return current_best_move;
@@ -112,8 +117,8 @@ public class L8 implements CXPlayer {
   private int move_maxi(CXBoard B, int depth) throws TimeoutException {
     checktime();
     if (B.gameState() == CXGameState.OPEN) {
-      int alpha = (int) -(1.5 * B.numOfFreeCells());
-      int beta = -alpha;
+      int alpha = Integer.MIN_VALUE;
+      int beta = Integer.MAX_VALUE;
       Integer[] possible_moves = reorderMoves(B);
       // System.err.println("Possible_moves:" + Arrays.toString(possible_moves));
       int move = possible_moves[0];
@@ -142,7 +147,7 @@ public class L8 implements CXPlayer {
         // System.err.println("Move: " + i);
         // System.err.println("Score: " + score);
       }
-      // System.err.println("Alpha: " + alpha);
+      System.err.println("Alpha: " + alpha);
       return move;
     } else
       throw new TimeoutException();
