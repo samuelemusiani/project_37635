@@ -19,6 +19,7 @@ public class L8 implements CXPlayer {
 
   // Transposition table
   private HashMap<Long, Integer> table; 
+  private HashMap<Long, Integer> table_depth; 
 
   // Heuristic
   private int evaPositionalMatrix[][];
@@ -27,7 +28,8 @@ public class L8 implements CXPlayer {
 
   // Iterative deeping
   private int current_best_move;
-  private boolean search_not_finished = true;
+  private boolean search_not_finished;
+  private int previous_search_depth;
 
   public L8() {
   }
@@ -38,6 +40,10 @@ public class L8 implements CXPlayer {
     TIMEOUT = timeout_in_secs;
 
     table = new HashMap<Long, Integer>();
+    table_depth = new HashMap<Long, Integer>();
+
+    am_i_fist = first;
+    previous_search_depth = 1;
 
     evaPositionalMatrix = new int[M][N];
     int max_dist = (int) Math.sqrt(M * M + N * N) / 2;
@@ -45,7 +51,7 @@ public class L8 implements CXPlayer {
     int center_y = M / 2;
     for (int i = 0; i < M; i++) {
       for (int j = N / 2; j < N; j++) {
-        evaPositionalMatrix[i][j] = (int) (max_dist - Math.sqrt(Math.pow(j - center_x, 2) + Math.pow(i - center_y, 2)));
+        evaPositionalMatrix[i][j] = 10 + (int) (max_dist - Math.sqrt(Math.pow(j - center_x, 2) + Math.pow(i - center_y, 2)));
       }
     }
 
@@ -89,12 +95,14 @@ public class L8 implements CXPlayer {
   }
 
   private int iterativeDeeping(CXBoard B) throws TimeoutException {
-    int depth = 1;
+    int depth = Math.max(previous_search_depth - 1, 1);
+    search_not_finished = true;
     while (search_not_finished) {
       System.err.println("Depth: " + depth);
       search_not_finished = false;
       current_best_move = move_maxi(B, depth);
-      System.err.println("Current_best_move: " + current_best_move);
+      // System.err.println("Current_best_move: " + current_best_move);
+      previous_search_depth = depth;
       depth++;
     }
     return current_best_move;
@@ -116,17 +124,21 @@ public class L8 implements CXPlayer {
         // System.err.println("Move: " + i);
 
         Integer score = table.get(converted_position);
-        if (score == null) {
+        Integer score_depth = table_depth.get(converted_position);
+        if (score == null || score_depth < depth) {
           // System.err.println("[" + alpha + ", " + beta + "]");
           score = alphaBetaMin(B, alpha, beta, depth - 1);
+          // System.err.println("Depth interna: " + depth);
         }
 
         if (score > alpha) {
           alpha = score;
           table.put(converted_position, score);
+          table_depth.put(converted_position, depth);
           move = i;
         }
         B.unmarkColumn();
+        // System.err.println("Move: " + i);
         // System.err.println("Score: " + score);
       }
       // System.err.println("Alpha: " + alpha);
@@ -149,7 +161,8 @@ public class L8 implements CXPlayer {
         B.markColumn(i);
         long converted_position = convertPosition(B);
         Integer score = table.get(converted_position);
-        if (score == null) {
+        Integer score_depth = table_depth.get(converted_position);
+        if (score == null || score_depth < depth) {
           score = alphaBetaMin(B, alpha, beta, depth - 1);
         }
 
@@ -161,6 +174,7 @@ public class L8 implements CXPlayer {
         if (score > alpha) {
           alpha = score;
           table.put(converted_position, score);
+          table_depth.put(converted_position, depth);
         }
         B.unmarkColumn();
       }
@@ -319,9 +333,9 @@ public class L8 implements CXPlayer {
 
   private int evaluate_win(CXBoard B) {
     if (B.gameState() == myWin)
-      return (B.numOfFreeCells() + 1) / 2 + 5; // To avoid 0 meaning win and draw
+      return (B.numOfFreeCells() + 1) / 2 + 1000000; // To avoid 0 meaning win and draw
     else if (B.gameState() == yourWin)
-      return -(B.numOfFreeCells() / 2) - 5;
+      return -(B.numOfFreeCells() / 2) - 1000000;
     else
       return 0;
   }
