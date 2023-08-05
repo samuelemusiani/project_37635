@@ -18,13 +18,12 @@ public class L8 implements CXPlayer {
   private long START;
 
   // Transposition table
-  private HashMap<Long, Integer> table; 
-  private HashMap<Long, Integer> table_depth; 
+  private HashMap<Long, Integer> table;
+  private HashMap<Long, Integer> table_depth;
 
   // Heuristic
   private int evaPositionalMatrix[][];
   private boolean am_i_fist;
-
 
   // Iterative deepening
   private int current_best_move;
@@ -51,7 +50,8 @@ public class L8 implements CXPlayer {
     int center_y = M / 2;
     for (int i = 0; i < M; i++) {
       for (int j = N / 2; j < N; j++) {
-        evaPositionalMatrix[i][j] = 10 + (int) (max_dist - Math.sqrt(Math.pow(j - center_x, 2) + Math.pow(i - center_y, 2)));
+        evaPositionalMatrix[i][j] = 10
+            + (int) (max_dist - Math.sqrt(Math.pow(j - center_x, 2) + Math.pow(i - center_y, 2)));
       }
     }
 
@@ -369,7 +369,7 @@ public class L8 implements CXPlayer {
       tmp[i].second = m[i];
       B.unmarkColumn();
     }
-    
+
     // O(N^2) selection sort :)
     for (int i = 0; i < l - 1; i++) {
       int min = i;
@@ -387,7 +387,7 @@ public class L8 implements CXPlayer {
         tmp[min].first = tmp[i].first;
         tmp[min].second = tmp[i].second;
 
-        tmp[i].first = pair_tmp.first; 
+        tmp[i].first = pair_tmp.first;
         tmp[i].second = pair_tmp.second;
       }
     }
