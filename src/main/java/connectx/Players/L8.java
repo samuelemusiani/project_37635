@@ -136,11 +136,11 @@ public class L8 implements CXPlayer {
           score = alphaBetaMin(B, alpha, beta, depth - 1);
           // System.err.println("Depth interna: " + depth);
         }
+        table.put(converted_position, score);
+        table_depth.put(converted_position, depth);
 
         if (score > alpha) {
           alpha = score;
-          table.put(converted_position, score);
-          table_depth.put(converted_position, depth);
           move = i;
         }
         B.unmarkColumn();
@@ -168,9 +168,13 @@ public class L8 implements CXPlayer {
         long converted_position = convertPosition(B);
         Integer score = table.get(converted_position);
         Integer score_depth = table_depth.get(converted_position);
+
         if (score == null || score_depth < depth) {
           score = alphaBetaMin(B, alpha, beta, depth - 1);
         }
+
+        table.put(converted_position, score);
+        table_depth.put(converted_position, depth);
 
         if (score >= beta) {
           B.unmarkColumn();
@@ -179,8 +183,6 @@ public class L8 implements CXPlayer {
 
         if (score > alpha) {
           alpha = score;
-          table.put(converted_position, score);
-          table_depth.put(converted_position, depth);
         }
         B.unmarkColumn();
       }
