@@ -6,6 +6,7 @@ import connectx.CXGameState;
 import connectx.CXCell;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
 /*
@@ -20,6 +21,9 @@ public class L9 implements CXPlayer {
   // Transposition table
   private HashMap<Long, Integer> table;
   private HashMap<Long, Integer> table_depth;
+
+  private boolean isBoardTooBig;
+  private long[][] zobrist_table;
 
   // Heuristic
   private int evaPositionalMatrix[][];
@@ -49,6 +53,27 @@ public class L9 implements CXPlayer {
 
     am_i_fist = first;
     previous_search_depth = 1;
+
+    isBoardTooBig = (M + 1) * N > 64;
+
+    if (!isBoardTooBig)
+      System.err.println("Board SMALL");
+    else {
+      System.err.println("Board BIG");
+      Random rand = new Random(System.currentTimeMillis());
+
+      zobrist_table = new long[2 * M][2 * N];
+
+      for (int j = 0; j < 2 * M; j++) {
+        for (int i = 0; i < 2 * M; i++) {
+          zobrist_table[j][i] = rand.nextInt();
+        }
+      }
+
+      for (int j = 0; j < 2 * M; j++) {
+        System.err.println(Arrays.toString(zobrist_table[j]));
+      }
+    }
 
     evaPositionalMatrix = new int[M][N];
     int max_dist = (int) Math.sqrt(M * M + N * N) / 2;
@@ -458,41 +483,66 @@ public class L9 implements CXPlayer {
   }
 
   private long convertPosition(CXBoard B) {
-    // M -> Righe
-    // N -> Colonne
-    // For the board rappresentation:
-    // http://blog.gamesolver.org/solving-connect-four/06-bitboard/
+    if (!isBoardTooBig) {
+      // M -> Righe
+      // N -> Colonne
+      // For the board rappresentation:
+      // http://blog.gamesolver.org/solving-connect-four/06-bitboard/
 
-    long position = 0;
-    long mask = 0;
-    long bottom = 0;
+      long position = 0;
+      long mask = 0;
+      long bottom = 0;
 
-    for (int j = B.N - 1; j >= 0; j--) {
-      for (int i = B.M - 1; i >= 0; i--) {
-        position = position << 1;
-        mask = mask << 1;
-        bottom = bottom << 1;
-        switch (B.cellState(B.M - i - 1, j)) {
-          case P1:
-            // System.err.println("INDICI: " + i + " " + j);
-            position |= 1;
-            mask |= 1;
-            break;
+      for (int j = B.N - 1; j >= 0; j--) {
+        for (int i = B.M - 1; i >= 0; i--) {
+          position = position << 1;
+          mask = mask << 1;
+          bottom = bottom << 1;
+          switch (B.cellState(B.M - i - 1, j)) {
+            case P1:
+              // System.err.println("INDICI: " + i + " " + j);
+              position |= 1;
+              mask |= 1;
+              break;
 
-          case P2:
-            mask |= 1;
-            break;
+            case P2:
+              mask |= 1;
+              break;
 
-          case FREE:
-            break;
+            case FREE:
+              break;
+          }
+        }
+        bottom |= 1;
+      }
+      // System.err.println("Pos: " + position);
+      // System.err.println("Mask: " + mask);
+      // System.err.println("Bottom: " + bottom);
+      return position + mask + bottom;
+    } else {
+      // Need to hash large boards
+
+      long sum = 0;
+
+      for (int j = 0; j < B.M; j++) {
+        for (int i = 0; i < B.N; i++) {
+          switch (B.cellState(j, i)) {
+            case P1:
+              sum ^= zobrist_table[j][i];
+              break;
+
+            case P2:
+              sum ^= zobrist_table[B.M + j][B.N + i];
+              break;
+
+            case FREE:
+              break;
+          }
         }
       }
-      bottom |= 1;
+      // System.err.println("Zobrist: " + sum);
+      return sum;
     }
-    // System.err.println("Pos: " + position);
-    // System.err.println("Mask: " + mask);
-    // System.err.println("Bottom: " + bottom);
-    return position + mask + bottom;
   }
 
   public String playerName() {
