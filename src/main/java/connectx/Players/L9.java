@@ -57,7 +57,7 @@ public class L9 implements CXPlayer {
     for (int i = 0; i < M; i++) {
       for (int j = N / 2; j < N; j++) {
         evaPositionalMatrix[i][j] = 10
-            + (int) (max_dist - Math.sqrt(Math.pow(j - center_x, 2) + Math.pow(i - center_y, 2)));
+            + (int) (2 * (max_dist - Math.sqrt(Math.pow(j - center_x, 2) + Math.pow(i - center_y, 2))));
       }
     }
 
@@ -115,6 +115,7 @@ public class L9 implements CXPlayer {
       System.err.println("FAST searches: " + fastSearches);
       System.err.println("Table HITS: " + tableHits);
       System.err.println("Table MISS: " + tableMiss);
+      System.err.println("Table ENTRIES: " + table.size());
       previous_search_depth = depth;
       depth += 2;
       search_not_finished = depth < 3 * B.numOfFreeCells();
@@ -154,11 +155,12 @@ public class L9 implements CXPlayer {
       } else
         tableHits++;
 
+      table.put(converted_position, score);
+      table_depth.put(converted_position, depth);
       B.unmarkColumn();
+
       if (score > alpha) {
         alpha = score;
-        table.put(converted_position, score);
-        table_depth.put(converted_position, depth);
         move = i;
         System.err.println("Entered");
       }
@@ -207,14 +209,16 @@ public class L9 implements CXPlayer {
       } else
         tableHits++;
 
+      table.put(converted_position, score);
+      table_depth.put(converted_position, depth);
+
       B.unmarkColumn();
+
       if (score >= beta)
         return beta;
 
       if (score > alpha) {
         alpha = score;
-        table.put(converted_position, score);
-        table_depth.put(converted_position, depth);
       }
       bSearchPv = false;
     }
@@ -378,17 +382,38 @@ public class L9 implements CXPlayer {
       return 0;
   }
 
-  private class intPair {
-    int first;
-    int second;
-
-    public intPair() {
-      first = 0;
-      second = 0;
-    }
-  }
+  // private class intPair {
+  // int first;
+  // int second;
+  //
+  // public intPair() {
+  // first = 0;
+  // second = 0;
+  // }
+  // }
 
   private Integer[] reorderMoves(CXBoard B) {
+    Integer[] m = B.getAvailableColumns();
+    int l = m.length;
+    Integer[] r = new Integer[l];
+
+    int delta = 0;
+
+    for (int i = 0; i < l; i++) {
+      if (i % 2 == 1)
+        delta++;
+
+      r[i] = m[l / 2 + (i % 2 == 0 ? 1 : -1) * delta];
+    }
+
+    return r;
+
+    // This code should reorder moves based on the transposition
+    // table value, but it perform worst and slower than the simple
+    // move ordering where the center is preferred.
+    // I think this i due to the heuristic, but for now I should keep
+    // the simple reordering
+
     // Integer[] m = B.getAvailableColumns();
     // int l = m.length;
     //
@@ -429,21 +454,7 @@ public class L9 implements CXPlayer {
     // for (int i = 0; i < l; i++) {
     // r[i] = tmp[i].second;
     // }
-
-    Integer[] m = B.getAvailableColumns();
-    int l = m.length;
-    Integer[] r = new Integer[l];
-
-    int delta = 0;
-
-    for (int i = 0; i < l; i++) {
-      if (i % 2 == 1)
-        delta++;
-
-      r[i] = m[l / 2 + (i % 2 == 0 ? 1 : -1) * delta];
-    }
-
-    return r;
+    // return r;
   }
 
   private long convertPosition(CXBoard B) {
