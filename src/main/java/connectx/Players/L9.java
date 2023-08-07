@@ -30,6 +30,12 @@ public class L9 implements CXPlayer {
   private boolean search_not_finished;
   private int previous_search_depth;
 
+  // Tmp
+  private int fullSearches;
+  private int fastSearches;
+  private int tableHits;
+  private int tableMiss;
+
   public L9() {
   }
 
@@ -94,12 +100,21 @@ public class L9 implements CXPlayer {
     else
       depth = Math.max(previous_search_depth - 2, 1);
 
+    tableHits = 0;
+    tableMiss = 0;
+
     search_not_finished = true;
     while (search_not_finished) {
+      fullSearches = 0;
+      fastSearches = 0;
       System.err.println("Depth: " + depth);
       search_not_finished = false;
       current_best_move = move_pvSearch(B, depth);
       // System.err.println("Current_best_move: " + current_best_move);
+      System.err.println("FULL searches: " + fullSearches);
+      System.err.println("FAST searches: " + fastSearches);
+      System.err.println("Table HITS: " + tableHits);
+      System.err.println("Table MISS: " + tableMiss);
       previous_search_depth = depth;
       depth += 2;
       search_not_finished = depth < 3 * B.numOfFreeCells();
@@ -120,21 +135,32 @@ public class L9 implements CXPlayer {
 
       // For now avoid transposition
 
-      int score;
-      if (bSearchPv) {
-        score = -pvSearch(B, -beta, -alpha, depth - 1, false);
-      } else {
-        score = -zwSearch(B, -alpha, depth - 1, false);
-        if (score > alpha /* && score < beta */) { // fail-soft need to research
+      long converted_position = convertPosition(B);
+      Integer score = table.get(converted_position);
+      Integer score_depth = table_depth.get(converted_position);
+      if (score == null || score_depth < depth) {
+        tableMiss++;
+        if (bSearchPv) {
+          fullSearches++;
           score = -pvSearch(B, -beta, -alpha, depth - 1, false);
+        } else {
+          fastSearches++;
+          score = -zwSearch(B, -alpha, depth - 1, false);
+          if (score > alpha /* && score < beta */) { // fail-soft need to research
+            fullSearches++;
+            score = -pvSearch(B, -beta, -alpha, depth - 1, false);
+          }
         }
-      }
+      } else
+        tableHits++;
 
       B.unmarkColumn();
       if (score > alpha) {
-        System.err.println("Entered");
         alpha = score;
+        table.put(converted_position, score);
+        table_depth.put(converted_position, depth);
         move = i;
+        System.err.println("Entered");
       }
       bSearchPv = false;
     }
@@ -162,15 +188,24 @@ public class L9 implements CXPlayer {
 
       // For now avoid transposition
 
-      int score;
-      if (bSearchPv) {
-        score = -pvSearch(B, -beta, -alpha, depth - 1, !whoIsPlaying);
-      } else {
-        score = -zwSearch(B, -alpha, depth - 1, !whoIsPlaying);
-        if (score > alpha /* && score < beta */) { // fail-soft need to research
+      long converted_position = convertPosition(B);
+      Integer score = table.get(converted_position);
+      Integer score_depth = table_depth.get(converted_position);
+      if (score == null || score_depth < depth) {
+        tableMiss++;
+        if (bSearchPv) {
+          fullSearches++;
           score = -pvSearch(B, -beta, -alpha, depth - 1, !whoIsPlaying);
+        } else {
+          fastSearches++;
+          score = -zwSearch(B, -alpha, depth - 1, !whoIsPlaying);
+          if (score > alpha /* && score < beta */) { // fail-soft need to research
+            fullSearches++;
+            score = -pvSearch(B, -beta, -alpha, depth - 1, !whoIsPlaying);
+          }
         }
-      }
+      } else
+        tableHits++;
 
       B.unmarkColumn();
       if (score >= beta)
@@ -178,6 +213,8 @@ public class L9 implements CXPlayer {
 
       if (score > alpha) {
         alpha = score;
+        table.put(converted_position, score);
+        table_depth.put(converted_position, depth);
       }
       bSearchPv = false;
     }
