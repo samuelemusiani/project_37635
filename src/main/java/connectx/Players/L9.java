@@ -10,7 +10,7 @@ import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
 /*
- * L9 implements PVS
+ * L9 implements PVS + Zobrist on large board
  */
 public class L9 implements CXPlayer {
   private CXGameState myWin;
@@ -18,12 +18,18 @@ public class L9 implements CXPlayer {
   private int TIMEOUT;
   private long START;
 
+  private int rows;
+  private int columns;
+
   // Transposition table
   private HashMap<Long, Integer> table;
   private HashMap<Long, Integer> table_depth;
 
   private boolean isBoardTooBig;
   private long[][] zobrist_table;
+  private int[] static_column_fullnes;
+  private int[] column_fullnes;
+  long current_position;
 
   // Heuristic
   private int evaPositionalMatrix[][];
@@ -48,6 +54,10 @@ public class L9 implements CXPlayer {
     yourWin = first ? CXGameState.WINP2 : CXGameState.WINP1;
     TIMEOUT = timeout_in_secs;
 
+    rows = M;
+    columns = N;
+    current_position = 0;
+
     table = new HashMap<Long, Integer>();
     table_depth = new HashMap<Long, Integer>();
 
@@ -65,13 +75,21 @@ public class L9 implements CXPlayer {
       zobrist_table = new long[2 * M][2 * N];
 
       for (int j = 0; j < 2 * M; j++) {
-        for (int i = 0; i < 2 * M; i++) {
+        for (int i = 0; i < 2 * N; i++) {
           zobrist_table[j][i] = rand.nextInt();
         }
       }
 
       for (int j = 0; j < 2 * M; j++) {
         System.err.println(Arrays.toString(zobrist_table[j]));
+      }
+
+      column_fullnes = new int[N];
+      static_column_fullnes = new int[N];
+
+      for (int i = 0; i < N; i++) {
+        column_fullnes[i] = 0;
+        static_column_fullnes[i] = 0;
       }
     }
 
@@ -104,11 +122,26 @@ public class L9 implements CXPlayer {
     current_best_move = L[0];
 
     try {
-      // System.err.println("Position: " + convertPosition(B));
-      return iterativeDeepening(B); // Keeps going untile a TimeoutException
+      if (B.numOfMarkedCells() > 0) {
+        int c = B.getLastMove().j;
+        current_position = zobristMakeMove(current_position, c, true);
+        static_column_fullnes[c]++;
+      }
+
+      for (int i = 0; i < columns; i++) {
+        column_fullnes[i] = static_column_fullnes[i];
+      }
+
+      int move = iterativeDeepening(B, current_position);
+      current_position = zobristMakeMove(current_position, move, false);
+      static_column_fullnes[move]++;
+      return move;
     } catch (TimeoutException e) {
       // System.err.println("Timeout!!! Random column selected");
       System.err.println("Timeout! Fall back on previous best move");
+      current_position = zobristMakeMove(current_position, current_best_move,
+          false);
+      static_column_fullnes[current_best_move]++;
       return current_best_move;
     }
   }
@@ -118,7 +151,7 @@ public class L9 implements CXPlayer {
       throw new TimeoutException();
   }
 
-  private int iterativeDeepening(CXBoard B) throws TimeoutException {
+  private int iterativeDeepening(CXBoard B, long position) throws TimeoutException {
     int depth;
     if (am_i_fist)
       depth = Math.max(previous_search_depth - 2, 2);
@@ -134,7 +167,7 @@ public class L9 implements CXPlayer {
       fastSearches = 0;
       System.err.println("Depth: " + depth);
       search_not_finished = false;
-      current_best_move = move_pvSearch(B, depth);
+      current_best_move = move_pvSearch(B, depth, position);
       // System.err.println("Current_best_move: " + current_best_move);
       System.err.println("FULL searches: " + fullSearches);
       System.err.println("FAST searches: " + fastSearches);
@@ -148,7 +181,7 @@ public class L9 implements CXPlayer {
     return current_best_move;
   }
 
-  private int move_pvSearch(CXBoard B, int depth) throws TimeoutException {
+  private int move_pvSearch(CXBoard B, int depth, long position) throws TimeoutException {
     checktime();
     int alpha = Integer.MIN_VALUE + 5;
     int beta = Integer.MAX_VALUE - 5;
@@ -158,23 +191,27 @@ public class L9 implements CXPlayer {
 
     for (int i : possible_moves) {
       B.markColumn(i);
+      position = zobristMakeMove(position, i, false);
 
       // For now avoid transposition
 
       long converted_position = convertPosition(B);
+
+      // System.err.println("CONVERSION: " + (converted_position == position));
+
       Integer score = table.get(converted_position);
       Integer score_depth = table_depth.get(converted_position);
       if (score == null || score_depth < depth) {
         tableMiss++;
         if (bSearchPv) {
           fullSearches++;
-          score = -pvSearch(B, -beta, -alpha, depth - 1, false);
+          score = -pvSearch(B, -beta, -alpha, depth - 1, true, position);
         } else {
           fastSearches++;
-          score = -zwSearch(B, -alpha, depth - 1, false);
+          score = -zwSearch(B, -alpha, depth - 1, true, position);
           if (score > alpha /* && score < beta */) { // fail-soft need to research
             fullSearches++;
-            score = -pvSearch(B, -beta, -alpha, depth - 1, false);
+            score = -pvSearch(B, -beta, -alpha, depth - 1, true, position);
           }
         }
       } else
@@ -183,6 +220,7 @@ public class L9 implements CXPlayer {
       table.put(converted_position, score);
       table_depth.put(converted_position, depth);
       B.unmarkColumn();
+      position = zobristUnmakeMove(position, i, false);
 
       if (score > alpha) {
         alpha = score;
@@ -197,14 +235,14 @@ public class L9 implements CXPlayer {
   }
 
   private int pvSearch(CXBoard B, int alpha, int beta, int depth,
-      boolean whoIsPlaying) throws TimeoutException {
+      boolean whoIsPlaying, long position) throws TimeoutException {
     checktime();
     if (B.gameState() != CXGameState.OPEN)
-      return evaluate_win(B) * (whoIsPlaying ? 1 : -1);
+      return evaluate_win(B) * (whoIsPlaying ? -1 : 1);
 
     if (depth <= 0) {
       search_not_finished = true;
-      return evaluate(B) * (whoIsPlaying ? 1 : -1);
+      return evaluate(B) * (whoIsPlaying ? -1 : 1);
     }
 
     boolean bSearchPv = true;
@@ -212,23 +250,26 @@ public class L9 implements CXPlayer {
 
     for (int i : possible_moves) {
       B.markColumn(i);
+      position = zobristMakeMove(position, i, whoIsPlaying);
 
       // For now avoid transposition
 
       long converted_position = convertPosition(B);
+      // System.err.println("CONVERSION: " + (converted_position == position));
+
       Integer score = table.get(converted_position);
       Integer score_depth = table_depth.get(converted_position);
       if (score == null || score_depth < depth) {
         tableMiss++;
         if (bSearchPv) {
           fullSearches++;
-          score = -pvSearch(B, -beta, -alpha, depth - 1, !whoIsPlaying);
+          score = -pvSearch(B, -beta, -alpha, depth - 1, !whoIsPlaying, position);
         } else {
           fastSearches++;
-          score = -zwSearch(B, -alpha, depth - 1, !whoIsPlaying);
+          score = -zwSearch(B, -alpha, depth - 1, !whoIsPlaying, position);
           if (score > alpha /* && score < beta */) { // fail-soft need to research
             fullSearches++;
-            score = -pvSearch(B, -beta, -alpha, depth - 1, !whoIsPlaying);
+            score = -pvSearch(B, -beta, -alpha, depth - 1, !whoIsPlaying, position);
           }
         }
       } else
@@ -238,6 +279,7 @@ public class L9 implements CXPlayer {
       table_depth.put(converted_position, depth);
 
       B.unmarkColumn();
+      position = zobristUnmakeMove(position, i, whoIsPlaying);
 
       if (score >= beta)
         return beta;
@@ -253,7 +295,7 @@ public class L9 implements CXPlayer {
 
   // fail-hard zero window search, returns either beta-1 or beta
   private int zwSearch(CXBoard B, int beta, int depth,
-      boolean whoIsPlaying) throws TimeoutException {
+      boolean whoIsPlaying, long position) throws TimeoutException {
     checktime();
     if (B.gameState() != CXGameState.OPEN)
       return evaluate_win(B) * (whoIsPlaying ? 1 : -1);
@@ -266,7 +308,7 @@ public class L9 implements CXPlayer {
     Integer[] possible_moves = reorderMoves(B);
     for (int i : possible_moves) {
       B.markColumn(i);
-      int score = -zwSearch(B, 1 - beta, depth - 1, !whoIsPlaying);
+      int score = -zwSearch(B, 1 - beta, depth - 1, !whoIsPlaying, position);
       B.unmarkColumn();
 
       if (score >= beta)
@@ -526,13 +568,13 @@ public class L9 implements CXPlayer {
 
       for (int j = 0; j < B.M; j++) {
         for (int i = 0; i < B.N; i++) {
-          switch (B.cellState(j, i)) {
+          switch (B.cellState(B.M - j - 1, i)) {
             case P1:
               sum ^= zobrist_table[j][i];
               break;
 
             case P2:
-              sum ^= zobrist_table[B.M + j][B.N + i];
+              sum ^= zobrist_table[rows + j][columns + i];
               break;
 
             case FREE:
@@ -543,6 +585,33 @@ public class L9 implements CXPlayer {
       // System.err.println("Zobrist: " + sum);
       return sum;
     }
+  }
+
+  private long zobristMakeMove(long pos, int i, boolean whoHasPlayed) {
+    if (!isBoardTooBig)
+      return pos;
+
+    // System.err.println("column_fullnes[i]: " + Arrays.toString(column_fullnes));
+
+    if (whoHasPlayed)
+      pos ^= zobrist_table[column_fullnes[i] + rows][i + columns];
+    else
+      pos ^= zobrist_table[column_fullnes[i]][i];
+
+    column_fullnes[i]++;
+    return pos;
+  }
+
+  private long zobristUnmakeMove(long pos, int i, boolean whoHasPlayed) {
+    if (!isBoardTooBig)
+      return pos;
+
+    column_fullnes[i]--;
+    if (whoHasPlayed)
+      pos ^= zobrist_table[column_fullnes[i] + rows][i + columns];
+    else
+      pos ^= zobrist_table[column_fullnes[i]][i];
+    return pos;
   }
 
   public String playerName() {
