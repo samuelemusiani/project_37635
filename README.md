@@ -21,7 +21,7 @@ $ gradlew build
 After the project built successfully, you can test computer vs computer with 
 the following command:
 ```sh
-$ java -jar build/libs/connectx.jar 6 7 4 connectx.L0.L0 connectx.L1.L1  
+$ java -jar build/libs/connectx.jar 6 7 4 connectx.Players.L0 connectx.Players.L1  
 ```
 If you are on Windows remember to change the `/` to the `\` for the path.
 
@@ -31,10 +31,10 @@ There are additional flags to use in order to specify different configurations:
 - With `-t` you can specify a maximum time of each move
 - With `-r` you can specify how many rounds need to be played.
 
-Verbose output and customized timeout (1 sec) and number of game repetitions 
-(10 rounds) should look like this:
+Verbose output and customized timeout (10 sec) and number of game repetitions 
+(2 rounds) should look like this:
 ```sh
-$ java -jar build/libs/connectx.jar 6 7 4 connectx.L0.L0 connectx.L1.L1 -v -t 1 -r 10
+$ java -jar build/libs/connectx.jar 6 7 4 connectx.Players.L0 connectx.Players.L1 -v -t 10 -r 2
 ``` 
 
 ## CXGame application:
