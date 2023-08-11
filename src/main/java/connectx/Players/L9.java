@@ -122,26 +122,34 @@ public class L9 implements CXPlayer {
     current_best_move = L[0];
 
     try {
-      if (B.numOfMarkedCells() > 0) {
-        int c = B.getLastMove().j;
-        current_position = zobristMakeMove(current_position, c, true);
-        static_column_fullnes[c]++;
-      }
+      if (isBoardTooBig) {
+        if (B.numOfMarkedCells() > 0) {
+          int c = B.getLastMove().j;
+          current_position = zobristMakeMove(current_position, c, true);
+          static_column_fullnes[c]++;
+        }
 
-      for (int i = 0; i < columns; i++) {
-        column_fullnes[i] = static_column_fullnes[i];
+        for (int i = 0; i < columns; i++) {
+          column_fullnes[i] = static_column_fullnes[i];
+        }
       }
 
       int move = iterativeDeepening(B, current_position);
-      current_position = zobristMakeMove(current_position, move, false);
-      static_column_fullnes[move]++;
+
+      if (isBoardTooBig) {
+        current_position = zobristMakeMove(current_position, move, false);
+        static_column_fullnes[move]++;
+      }
       return move;
     } catch (TimeoutException e) {
       // System.err.println("Timeout!!! Random column selected");
       System.err.println("Timeout! Fall back on previous best move");
       current_position = zobristMakeMove(current_position, current_best_move,
           false);
-      static_column_fullnes[current_best_move]++;
+
+      if (isBoardTooBig)
+        static_column_fullnes[current_best_move]++;
+
       return current_best_move;
     }
   }
