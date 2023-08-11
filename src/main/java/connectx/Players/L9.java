@@ -306,11 +306,11 @@ public class L9 implements CXPlayer {
       boolean whoIsPlaying, long position) throws TimeoutException {
     checktime();
     if (B.gameState() != CXGameState.OPEN)
-      return evaluate_win(B) * (whoIsPlaying ? 1 : -1);
+      return evaluate_win(B) * (whoIsPlaying ? -1 : 1);
 
     if (depth <= 0) {
       search_not_finished = true;
-      return evaluate(B) * (whoIsPlaying ? 1 : -1);
+      return evaluate(B) * (whoIsPlaying ? -1 : 1);
     }
 
     Integer[] possible_moves = reorderMoves(B);
