@@ -183,9 +183,11 @@ public class L9 implements CXPlayer {
       System.err.println("Table MISS: " + tableMiss);
       System.err.println("Table ENTRIES: " + table.size());
       previous_search_depth = depth;
+      search_not_finished = depth < Math.max(2 * B.numOfFreeCells(), 8);
       depth += 2;
-      search_not_finished = depth < 3 * B.numOfFreeCells();
     }
+    previous_search_depth += 2;
+
     return current_best_move;
   }
 
