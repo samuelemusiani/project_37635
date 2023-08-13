@@ -123,20 +123,21 @@ public class L9 implements CXPlayer {
 
     try {
       if (isBoardTooBig) {
+        for (int i = 0; i < columns; i++) {
+          column_fullnes[i] = static_column_fullnes[i];
+        }
+
         if (B.numOfMarkedCells() > 0) {
           int c = B.getLastMove().j;
           current_position = zobristMakeMove(current_position, c, true);
           static_column_fullnes[c]++;
-        }
-
-        for (int i = 0; i < columns; i++) {
-          column_fullnes[i] = static_column_fullnes[i];
         }
       }
 
       int move = iterativeDeepening(B, current_position);
 
       if (isBoardTooBig) {
+        column_fullnes[current_best_move] = static_column_fullnes[current_best_move];
         current_position = zobristMakeMove(current_position, move, false);
         static_column_fullnes[move]++;
       }
@@ -144,11 +145,13 @@ public class L9 implements CXPlayer {
     } catch (TimeoutException e) {
       // System.err.println("Timeout!!! Random column selected");
       System.err.println("Timeout! Fall back on previous best move");
-      current_position = zobristMakeMove(current_position, current_best_move,
-          false);
+      if (isBoardTooBig) {
+        column_fullnes[current_best_move] = static_column_fullnes[current_best_move];
+        current_position = zobristMakeMove(current_position, current_best_move,
+            false);
 
-      if (isBoardTooBig)
         static_column_fullnes[current_best_move]++;
+      }
 
       return current_best_move;
     }
@@ -452,9 +455,9 @@ public class L9 implements CXPlayer {
 
   private int evaluate_win(CXBoard B) {
     if (B.gameState() == myWin)
-      return (B.numOfFreeCells() + 1) / 2 + 1000000; // To avoid 0 meaning win and draw
+      return (B.numOfFreeCells() + 1) / 2 + 1000000000; // To avoid 0 meaning win and draw
     else if (B.gameState() == yourWin)
-      return -(B.numOfFreeCells() / 2) - 1000000;
+      return -(B.numOfFreeCells() / 2) - 1000000000;
     else
       return 0;
   }
@@ -603,10 +606,20 @@ public class L9 implements CXPlayer {
 
     // System.err.println("column_fullnes[i]: " + Arrays.toString(column_fullnes));
 
-    if (whoHasPlayed)
+    System.err.println("ZobristMAKEmove: " + i);
+    System.err.println("whoHasPlayed: " + whoHasPlayed);
+
+    if (whoHasPlayed) {
+      System.err.println("column_fullnes[i]: " + column_fullnes[i]);
+      System.err.println("rows: " + rows);
+      System.err.println("i + columns: " + (i + columns));
       pos ^= zobrist_table[column_fullnes[i] + rows][i + columns];
-    else
+    } else {
+      System.err.println("column_fullnes[i]: " + column_fullnes[i]);
       pos ^= zobrist_table[column_fullnes[i]][i];
+    }
+
+    System.err.println("Made the move");
 
     column_fullnes[i]++;
     return pos;
@@ -616,11 +629,19 @@ public class L9 implements CXPlayer {
     if (!isBoardTooBig)
       return pos;
 
+    System.err.println("ZobristUNMAKEmove: " + i);
+    System.err.println("whoHasPlayed: " + whoHasPlayed);
+
     column_fullnes[i]--;
-    if (whoHasPlayed)
+    if (whoHasPlayed) {
+      System.err.println("column_fullnes[i]: " + column_fullnes[i]);
+      System.err.println("rows: " + rows);
+      System.err.println("i + columns: " + (i + columns));
       pos ^= zobrist_table[column_fullnes[i] + rows][i + columns];
-    else
+    } else {
+      System.err.println("column_fullnes[i]: " + column_fullnes[i]);
       pos ^= zobrist_table[column_fullnes[i]][i];
+    }
     return pos;
   }
 
