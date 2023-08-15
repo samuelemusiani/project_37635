@@ -121,6 +121,9 @@ public class L9 implements CXPlayer {
     Integer[] L = reorderMoves(B);
     current_best_move = L[0];
 
+    if (table.size() > 2_000_000) // Avoid heap errors
+      table.clear();
+
     try {
       if (isBoardTooBig) {
         for (int i = 0; i < columns; i++) {
@@ -158,7 +161,7 @@ public class L9 implements CXPlayer {
   }
 
   private void checktime() throws TimeoutException {
-    if ((System.currentTimeMillis() - START) / 1000.0 >= TIMEOUT * (99.0 / 100.0))
+    if ((System.currentTimeMillis() - START) / 1000.0 >= TIMEOUT * (98.0 / 100.0))
       throw new TimeoutException();
   }
 
