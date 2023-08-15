@@ -780,20 +780,20 @@ public class gpt4reorder implements CXPlayer {
 
     // System.err.println("column_fullnes[i]: " + Arrays.toString(column_fullnes));
 
-    System.err.println("ZobristMAKEmove: " + i);
-    System.err.println("whoHasPlayed: " + whoHasPlayed);
+    // System.err.println("ZobristMAKEmove: " + i);
+    // System.err.println("whoHasPlayed: " + whoHasPlayed);
 
     if (whoHasPlayed) {
-      System.err.println("column_fullnes[i]: " + column_fullnes[i]);
-      System.err.println("rows: " + rows);
-      System.err.println("i + columns: " + (i + columns));
+      // System.err.println("column_fullnes[i]: " + column_fullnes[i]);
+      // System.err.println("rows: " + rows);
+      // System.err.println("i + columns: " + (i + columns));
       pos ^= zobrist_table[column_fullnes[i] + rows][i + columns];
     } else {
-      System.err.println("column_fullnes[i]: " + column_fullnes[i]);
+      // System.err.println("column_fullnes[i]: " + column_fullnes[i]);
       pos ^= zobrist_table[column_fullnes[i]][i];
     }
 
-    System.err.println("Made the move");
+    // System.err.println("Made the move");
 
     column_fullnes[i]++;
     return pos;
@@ -803,17 +803,17 @@ public class gpt4reorder implements CXPlayer {
     if (!isBoardTooBig)
       return pos;
 
-    System.err.println("ZobristUNMAKEmove: " + i);
-    System.err.println("whoHasPlayed: " + whoHasPlayed);
+    // System.err.println("ZobristUNMAKEmove: " + i);
+    // System.err.println("whoHasPlayed: " + whoHasPlayed);
 
     column_fullnes[i]--;
     if (whoHasPlayed) {
-      System.err.println("column_fullnes[i]: " + column_fullnes[i]);
-      System.err.println("rows: " + rows);
-      System.err.println("i + columns: " + (i + columns));
+      // System.err.println("column_fullnes[i]: " + column_fullnes[i]);
+      // System.err.println("rows: " + rows);
+      // System.err.println("i + columns: " + (i + columns));
       pos ^= zobrist_table[column_fullnes[i] + rows][i + columns];
     } else {
-      System.err.println("column_fullnes[i]: " + column_fullnes[i]);
+      // System.err.println("column_fullnes[i]: " + column_fullnes[i]);
       pos ^= zobrist_table[column_fullnes[i]][i];
     }
     return pos;
