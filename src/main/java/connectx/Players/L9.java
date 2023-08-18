@@ -46,6 +46,8 @@ public class L9 implements CXPlayer {
   private int tableHits;
   private int tableMiss;
 
+  private int evaluateCalls;
+
   public L9() {
   }
 
@@ -137,6 +139,7 @@ public class L9 implements CXPlayer {
         }
       }
 
+      System.err.println("EvaluateCalls: " + evaluateCalls);
       int move = iterativeDeepening(B, current_position);
 
       if (isBoardTooBig) {
@@ -147,6 +150,7 @@ public class L9 implements CXPlayer {
       return move;
     } catch (TimeoutException e) {
       // System.err.println("Timeout!!! Random column selected");
+      System.err.println("EvaluateCalls: " + evaluateCalls);
       System.err.println("Timeout! Fall back on previous best move");
       if (isBoardTooBig) {
         column_fullnes[current_best_move] = static_column_fullnes[current_best_move];
@@ -174,6 +178,8 @@ public class L9 implements CXPlayer {
 
     tableHits = 0;
     tableMiss = 0;
+
+    evaluateCalls = 0;
 
     search_not_finished = true;
     while (search_not_finished) {
@@ -334,6 +340,7 @@ public class L9 implements CXPlayer {
   }
 
   private int evaluate(CXBoard B) {
+    evaluateCalls++;
     int sum = 0;
 
     // Check the position of my pieces and opponent pieces
@@ -457,6 +464,7 @@ public class L9 implements CXPlayer {
   }
 
   private int evaluate_win(CXBoard B) {
+    evaluateCalls++;
     if (B.gameState() == myWin)
       return (B.numOfFreeCells() + 1) / 2 + 1000000000; // To avoid 0 meaning win and draw
     else if (B.gameState() == yourWin)
