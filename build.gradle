@@ -13,5 +13,6 @@
    manifest {
      // attributes 'Main-Class': 'connectx.CXGame'
      attributes 'Main-Class': 'connectx.CXPlayerTester'
+     // attributes 'Main-Class': 'connectx.CXBitTest'
    }
  }
