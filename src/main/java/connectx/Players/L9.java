@@ -139,8 +139,8 @@ public class L9 implements CXPlayer {
         }
       }
 
-      System.err.println("EvaluateCalls: " + evaluateCalls);
       int move = iterativeDeepening(B, current_position);
+      System.err.println("EvaluateCalls: " + evaluateCalls);
 
       if (isBoardTooBig) {
         column_fullnes[current_best_move] = static_column_fullnes[current_best_move];
@@ -239,6 +239,7 @@ public class L9 implements CXPlayer {
       } else
         tableHits++;
 
+      System.err.println("Score: " + score);
       table.put(converted_position, score);
       table_depth.put(converted_position, depth);
       B.unmarkColumn();

@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 public class CXBitTest {
   public static void main(String[] args) {
-    CXBitBoard board = new CXBitBoard(7, 7, 5);
+    CXBitBoard board = new CXBitBoard(4, 6, 4);
 
     Scanner scan = new Scanner(System.in);
 
@@ -22,6 +22,11 @@ public class CXBitTest {
       else
         board.unmarkColumn();
 
+      for (int i = 0; i < board.Columns; i++) {
+        for (int j = 0; j < board.Rows; j++) {
+          System.err.println("State ( " + i + ", " + j + "): " + board.cellState(i, j));
+        }
+      }
     }
 
     System.err.println("gameState: " + board.gameState());

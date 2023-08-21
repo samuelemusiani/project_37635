@@ -79,7 +79,7 @@ public class CXBitBoard {
 
   // 1 -> Player 1, 2 -> player 2, 0 empty
   public int cellState(int i, int j) {
-    long tmp = (1l << ((Rows + 1) * i + j));
+    long tmp = (1l << ((Rows + 1) * j + i));
 
     if ((position & tmp) != 0) {
       return currentPlayer ? 2 : 1;
