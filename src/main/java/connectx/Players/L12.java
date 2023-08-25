@@ -11,7 +11,7 @@ import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
 /*
- * L11 + heuristic
+ * L11 + heuristic (can't play large board for now)
  */
 public class L12 implements CXPlayer {
   private int myWin;

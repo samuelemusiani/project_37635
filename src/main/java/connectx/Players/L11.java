@@ -11,7 +11,8 @@ import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
 /*
- * l9 copy with small boards bitwise optimization
+ * l9 copy with small boards bitwise optimization 
+ * (can't play large board for now)
  */
 public class L11 implements CXPlayer {
   private int myWin;
