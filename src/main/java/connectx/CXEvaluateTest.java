@@ -13,6 +13,7 @@ public class CXEvaluateTest {
 
   final int Rows = 6;
   final int Columns = 7;
+  final int toAlign = 4;
 
   int myWin;
   int yourWin;
@@ -29,11 +30,20 @@ public class CXEvaluateTest {
     int center_x = Columns / 2;
     int center_y = Rows / 2;
 
-    // Fill half of the board with value that are larger near the center
-    for (int i = 0; i < Rows * 4 / 5; i++) {
-      for (int j = Columns / 2; j < Columns; j++) {
-        evaPositionalMatrix[i][j] = (int) (2
-            * (max_dist - Math.sqrt(Math.pow(j - center_x, 2) + Math.pow(i - center_y, 2))));
+    // // Fill half of the board with value that are larger near the center
+    // for (int i = 0; i < Rows * 4 / 5; i++) {
+    // for (int j = Columns / 2; j < Columns; j++) {
+    // evaPositionalMatrix[i][j] = (int) (2
+    // * (max_dist - Math.sqrt(Math.pow(j - center_x, 2) + Math.pow(i - center_y,
+    // 2))));
+    // }
+    // }
+
+    // In this way we can balance the points if black put a men on top of white
+    // Basically we don't value height but "centerness"
+    for (int i = Columns / 2; i < Columns; i++) {
+      for (int j = 0; j < Rows; j++) {
+        evaPositionalMatrix[j][i] = Columns - i;
       }
     }
 
@@ -55,7 +65,7 @@ public class CXEvaluateTest {
   }
 
   public void run() {
-    CXBitBoard board = new CXBitBoard(4, 6, 4);
+    CXBitBoard board = new CXBitBoard(Rows, Columns, toAlign);
 
     Scanner scan = new Scanner(System.in);
 
@@ -95,8 +105,9 @@ public class CXEvaluateTest {
       B.markColumn(i);
       int state = B.gameState();
       if (state != 2) { // Someone won
+        int val = evaluate_win(B);
         B.unmarkColumn(); // To avoid messing the board in the caller
-        return evaluate_win(B);
+        return val;
       }
       B.unmarkColumn();
     }
@@ -105,7 +116,7 @@ public class CXEvaluateTest {
     int sum = 0;
     int tmpSum = 0;
 
-    double POSITION_WEIGHT = B.numOfFreeCells() / 2;
+    double POSITION_WEIGHT = B.numOfFreeCells() / 4;
     double VERTICAL_WEIGHT = 0.3;
     double HORIZONTAL_WEIGHT = 1.3;
     double DIAGONAL_WEIGHT = 1.5;
@@ -129,13 +140,16 @@ public class CXEvaluateTest {
         }
       }
     }
+    // System.err.println("tmpSum: " + tmpSum);
+    // System.err.println("POSITION_WEIGHT: " + POSITION_WEIGHT);
+    System.err.print("Pos: " + tmpSum * POSITION_WEIGHT);
     sum += tmpSum * POSITION_WEIGHT;
     tmpSum = 0;
 
     // Need to check the adjacent pieces
 
     // Horizontal
-    for (int i = 1; i < B.Rows; i++) {
+    for (int i = 0; i < B.Rows; i++) {
       int countMen1 = 0;
       int countMen2 = 0;
       int countSpaces1 = 0;
@@ -152,8 +166,8 @@ public class CXEvaluateTest {
             break;
 
           case 2:
-            if (countMen1 + countSpaces1 >= B.ToAlign) {
-              tmpSum += (Math.pow(2, countSpaces1 + countMen1 * 2) - 1) *
+            if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
+              tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
                   (am_i_fist ? 1 : -1);
             }
             countMen1 = 0;
@@ -168,8 +182,8 @@ public class CXEvaluateTest {
         // Player 2 checks
         switch (cellState) {
           case 1:
-            if (countMen2 + countSpaces2 >= B.ToAlign) {
-              tmpSum += (Math.pow(2, countSpaces2 + countMen2 * 2) - 1) *
+            if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
+              tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
                   (!am_i_fist ? 1 : -1);
             }
             countMen2 = 0;
@@ -185,8 +199,23 @@ public class CXEvaluateTest {
             break;
         }
       }
+      // System.err.print("tmpSum1: " + tmpSum + " men1: " + countMen1 +
+      // " men2: " + countMen2 + " blank1: " + countSpaces1 + " blank2: " +
+      // countSpaces2);
+
+      // if we didn't hit the opponent men we need to evaluate
+      if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
+        tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
+            (am_i_fist ? 1 : -1);
+      }
+      if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
+        tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
+            (!am_i_fist ? 1 : -1);
+      }
+      // System.err.println(" tmpSum2: " + tmpSum);
     }
     sum += tmpSum * HORIZONTAL_WEIGHT;
+    System.err.print(" Horizzontal: " + tmpSum * HORIZONTAL_WEIGHT);
     tmpSum = 0;
 
     // Vertical
@@ -242,6 +271,8 @@ public class CXEvaluateTest {
       }
     }
     sum += tmpSum * VERTICAL_WEIGHT;
+    System.err.print(" Vetical: " + tmpSum * VERTICAL_WEIGHT);
+    System.err.println();
     tmpSum = 0;
 
     // Diagonal check??
