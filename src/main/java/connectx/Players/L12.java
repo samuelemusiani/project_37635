@@ -365,7 +365,7 @@ public class L12 implements CXPlayer {
     double POSITION_WEIGHT = 4;
     double VERTICAL_WEIGHT = 0.3;
     double HORIZONTAL_WEIGHT = 1.3;
-    double DIAGONAL_WEIGHT = 3;
+    double DIAGONAL_WEIGHT = 5;
 
     // Check the position of my pieces and opponent pieces
     // The more near the center the more point one piece gets
