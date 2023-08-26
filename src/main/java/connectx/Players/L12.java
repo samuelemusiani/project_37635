@@ -179,9 +179,9 @@ public class L12 implements CXPlayer {
   }
 
   private int iterativeDeepening(CXBitBoard B) throws TimeoutException {
-    int depth = 2;
+    int depth = 1;
     if (am_i_fist)
-      depth = Math.max(previous_search_depth - 2, 2);
+      depth = Math.max(previous_search_depth - 2, 1);
     else
       depth = Math.max(previous_search_depth - 2, 1);
 
@@ -205,7 +205,8 @@ public class L12 implements CXPlayer {
       System.err.println("Table ENTRIES: " + table.size());
       previous_search_depth = depth;
       search_not_finished = depth < Math.max(2 * B.numOfFreeCells(), 8);
-      depth += 2;
+      // depth += 2;
+      depth++;
       // break;
     }
     previous_search_depth += 2;
