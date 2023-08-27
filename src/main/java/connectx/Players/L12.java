@@ -1043,29 +1043,29 @@ class L12Big {
     double HORIZONTAL_WEIGHT = 1.3;
     double DIAGONAL_WEIGHT = 5;
 
-    int MANSPACERATIO = 4;
+    int MANSPACERATIO = 5;
 
     // Check the position of my pieces and opponent pieces
     // The more near the center the more point one piece gets
-    for (int i = 0; i < B.M; i++) {
-      for (int j = 0; j < B.N; j++) {
-        // switch (B.cellState(B.M - i - 1, j)) {
-        switch (B.cellState(i, j)) {
-          case P1:
-            tmpSum += am_i_fist ? evaPositionalMatrix[i][j] : -evaPositionalMatrix[i][j];
-            break;
-
-          case P2:
-            tmpSum += am_i_fist ? -evaPositionalMatrix[i][j] : evaPositionalMatrix[i][j];
-            break;
-
-          case FREE:
-            break;
-        }
-      }
-    }
-    sum += tmpSum * POSITION_WEIGHT;
-    tmpSum = 0;
+    // for (int i = 0; i < B.M; i++) {
+    // for (int j = 0; j < B.N; j++) {
+    // // switch (B.cellState(B.M - i - 1, j)) {
+    // switch (B.cellState(B.M - i - 1, j)) {
+    // case P1:
+    // tmpSum += am_i_fist ? evaPositionalMatrix[i][j] : -evaPositionalMatrix[i][j];
+    // break;
+    //
+    // case P2:
+    // tmpSum += am_i_fist ? -evaPositionalMatrix[i][j] : evaPositionalMatrix[i][j];
+    // break;
+    //
+    // case FREE:
+    // break;
+    // }
+    // }
+    // }
+    // sum += tmpSum * POSITION_WEIGHT;
+    // tmpSum = 0;
 
     // Need to check the adjacent pieces
 
@@ -1078,7 +1078,7 @@ class L12Big {
 
       for (int j = 0; j < B.N; j++) {
 
-        CXCellState cellState = B.cellState(i, j);
+        CXCellState cellState = B.cellState(B.M - i - 1, j);
 
         // Player 1 checks
         switch (cellState) {
@@ -1097,7 +1097,7 @@ class L12Big {
 
           case FREE:
             // Only count white space if there are men underneath them
-            if (i != 0 && B.cellState(i - 1, j) != CXCellState.FREE) {
+            if (i < B.M - 1 && B.cellState(B.M - i - 2, j) != CXCellState.FREE) {
               countSpaces1++;
             }
             break;
@@ -1120,7 +1120,7 @@ class L12Big {
 
           case FREE:
             // Only count white space if there are men underneath them
-            if (i != 0 && B.cellState(i - 1, j) != CXCellState.FREE) {
+            if (i < B.M - 1 && B.cellState(B.M - i - 2, j) != CXCellState.FREE) {
               countSpaces2++;
             }
             break;
@@ -1149,7 +1149,7 @@ class L12Big {
 
       for (int j = 0; j < B.M; j++) {
 
-        CXCellState cellState = B.cellState(j, i);
+        CXCellState cellState = B.cellState(B.M - j - 1, i);
 
         // Player 1 checks
         switch (cellState) {
@@ -1214,7 +1214,7 @@ class L12Big {
       int countSpaces1 = 0;
       int countSpaces2 = 0;
       for (int j = slice - z2; j >= z1; --j) {
-        CXCellState cellState = B.cellState(j, slice - j);
+        CXCellState cellState = B.cellState(B.M - j - 1, slice - j);
 
         // Player 1 checks
         switch (cellState) {
@@ -1292,7 +1292,7 @@ class L12Big {
 
       for (int j = (B.M - 1) - slice + z2; j <= (B.M - 1) - z1; j++) {
 
-        CXCellState cellState = B.cellState(j, j + (slice - B.M + 1));
+        CXCellState cellState = B.cellState(B.M - j - 1, j + (slice - B.M + 1));
 
         // Player 1 checks
         switch (cellState) {
