@@ -1041,7 +1041,7 @@ class L12Big {
     double POSITION_WEIGHT = 4;
     double VERTICAL_WEIGHT = 0.3;
     double HORIZONTAL_WEIGHT = 1.3;
-    double DIAGONAL_WEIGHT = 5;
+    double DIAGONAL_WEIGHT = 2;
 
     int MANSPACERATIO = 5;
 
@@ -1087,7 +1087,7 @@ class L12Big {
             break;
 
           case P2:
-            if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
+            if (countMen1 >= 1 && countMen1 + countSpaces1 >= B.X) {
               tmpSum += 2 * (countSpaces1 + countMen1 * MANSPACERATIO) *
                   (am_i_fist ? 1 : -1);
             }
@@ -1106,7 +1106,7 @@ class L12Big {
         // Player 2 checks
         switch (cellState) {
           case P1:
-            if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
+            if (countMen2 >= 1 && countMen2 + countSpaces2 >= B.X) {
               tmpSum += 2 * (countSpaces2 + countMen2 * MANSPACERATIO) *
                   (!am_i_fist ? 1 : -1);
             }
@@ -1128,11 +1128,11 @@ class L12Big {
       }
 
       // if we didn't hit the opponent men we need to evaluate
-      if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
+      if (countMen1 >= 1 && countMen1 + countSpaces1 >= B.X) {
         tmpSum += 2 * (countSpaces1 + countMen1 * MANSPACERATIO) *
             (am_i_fist ? 1 : -1);
       }
-      if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
+      if (countMen2 >= 1 && countMen2 + countSpaces2 >= B.X) {
         tmpSum += 2 * (countSpaces2 + countMen2 * MANSPACERATIO) *
             (!am_i_fist ? 1 : -1);
       }
@@ -1223,7 +1223,7 @@ class L12Big {
             break;
 
           case P2:
-            if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
+            if (countMen1 >= 1 && countMen1 + countSpaces1 >= B.X) {
               tmpSum += 2 * (countSpaces1 + countMen1 * MANSPACERATIO) *
                   (am_i_fist ? 1 : -1);
             }
@@ -1243,7 +1243,7 @@ class L12Big {
         // Player 2 checks
         switch (cellState) {
           case P1:
-            if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
+            if (countMen2 >= 1 && countMen2 + countSpaces2 >= B.X) {
               tmpSum += 2 * (countSpaces2 + countMen2 * MANSPACERATIO) *
                   (!am_i_fist ? 1 : -1);
             }
@@ -1265,11 +1265,11 @@ class L12Big {
         }
       }
       // if we didn't hit the opponent men we need to evaluate
-      if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
+      if (countMen1 >= 1 && countMen1 + countSpaces1 >= B.X) {
         tmpSum += 2 * (countSpaces1 + countMen1 * MANSPACERATIO) *
             (am_i_fist ? 1 : -1);
       }
-      if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
+      if (countMen2 >= 1 && countMen2 + countSpaces2 >= B.X) {
         tmpSum += 2 * (countSpaces2 + countMen2 * MANSPACERATIO) *
             (!am_i_fist ? 1 : -1);
       }
@@ -1301,7 +1301,7 @@ class L12Big {
             break;
 
           case P2:
-            if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
+            if (countMen1 >= 1 && countMen1 + countSpaces1 >= B.X) {
               tmpSum += 2 * (countSpaces1 + countMen1 * MANSPACERATIO) *
                   (am_i_fist ? 1 : -1);
             }
@@ -1321,7 +1321,7 @@ class L12Big {
         // Player 2 checks
         switch (cellState) {
           case P1:
-            if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
+            if (countMen2 >= 1 && countMen2 + countSpaces2 >= B.X) {
               tmpSum += 2 * (countSpaces2 + countMen2 * MANSPACERATIO) *
                   (!am_i_fist ? 1 : -1);
             }
@@ -1343,11 +1343,11 @@ class L12Big {
         }
       }
       // if we didn't hit the opponent men we need to evaluate
-      if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
+      if (countMen1 >= 1 && countMen1 + countSpaces1 >= B.X) {
         tmpSum += 2 * (countSpaces1 + countMen1 * MANSPACERATIO) *
             (am_i_fist ? 1 : -1);
       }
-      if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
+      if (countMen2 >= 1 && countMen2 + countSpaces2 >= B.X) {
         tmpSum += 2 * (countSpaces2 + countMen2 * MANSPACERATIO) *
             (!am_i_fist ? 1 : -1);
       }
