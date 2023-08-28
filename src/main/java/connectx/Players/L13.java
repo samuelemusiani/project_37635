@@ -226,7 +226,7 @@ class L13Small {
       oldEvalScore = decrementalEvaluate(board, c.i, c.j, this.oldEvalScore,
           this.oldRowScore, this.oldColumnsScore);
 
-      System.err.println("EvaluateCalls: " + evaluateCalls);
+      // System.err.println("EvaluateCalls: " + evaluateCalls);
 
       return current_best_move;
     }
@@ -252,7 +252,7 @@ class L13Small {
     while (search_not_finished) {
       fullSearches = 0;
       fastSearches = 0;
-      System.err.println("Depth: " + depth);
+      // System.err.println("Depth: " + depth);
       search_not_finished = false;
       current_best_move = move_pvSearch(B, depth);
       // System.err.println("Current_best_move: " + current_best_move);
@@ -617,12 +617,16 @@ class L13Small {
     // https://stackoverflow.com/a/33365042
 
     // Diagonal \
-    for (int slice = 0; slice < B.Rows + B.Columns - 1; ++slice) {
+    diagonal1: {
+      int slice = lastMoveRow + lastMoveColumn;
+
       int z2 = slice < B.Rows ? 0 : slice - B.Rows + 1;
       int z1 = slice < B.Columns ? 0 : slice - B.Columns + 1;
 
+      // Avoid checking small diagonals
       if (slice - z2 - z1 + 1 < B.ToAlign)
-        continue;
+        break diagonal1;
+
       // printf("Slice %d (l: /* % */d): ", slice, slice - z2 - z1 + 1);
 
       int countMen1 = 0;
@@ -694,12 +698,13 @@ class L13Small {
     tmpSum = 0;
 
     // Diagonal /
-    for (int slice = 0; slice < B.Columns + B.Rows - 1; ++slice) {
+    diagonal2: {
+      int slice = lastMoveColumn + lastMoveRow;
       int z1 = slice < B.Columns ? 0 : slice - B.Columns + 1;
       int z2 = slice < B.Rows ? 0 : slice - B.Rows + 1;
 
       if (slice - z2 - z1 + 1 < B.ToAlign)
-        continue;
+        break diagonal2;
 
       int countMen1 = 0;
       int countMen2 = 0;
