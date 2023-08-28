@@ -213,6 +213,8 @@ class L13Small {
       oldEvalScore = decrementalEvaluate(board, c.i, c.j, this.oldEvalScore,
           this.oldRowScore, this.oldColumnsScore);
 
+      System.err.println("EvaluateCalls: " + evaluateCalls);
+
       return move;
     } catch (TimeoutException e) {
       // System.err.println("EvaluateCalls: " + evaluateCalls);
@@ -223,6 +225,8 @@ class L13Small {
       CXCell c = board.getLastMove();
       oldEvalScore = decrementalEvaluate(board, c.i, c.j, this.oldEvalScore,
           this.oldRowScore, this.oldColumnsScore);
+
+      System.err.println("EvaluateCalls: " + evaluateCalls);
 
       return current_best_move;
     }
@@ -248,7 +252,7 @@ class L13Small {
     while (search_not_finished) {
       fullSearches = 0;
       fastSearches = 0;
-      // System.err.println("Depth: " + depth);
+      System.err.println("Depth: " + depth);
       search_not_finished = false;
       current_best_move = move_pvSearch(B, depth);
       // System.err.println("Current_best_move: " + current_best_move);
@@ -308,7 +312,7 @@ class L13Small {
       } else
         tableHits++;
 
-      System.err.println("Score: " + score + " Depth: " + depth);
+      // System.err.println("Score: " + score + " Depth: " + depth);
 
       // System.err.println("Score: " + score);
       table.put(converted_position, score);
@@ -340,10 +344,8 @@ class L13Small {
 
     if (depth <= 0) {
       search_not_finished = true;
+      evaluateCalls++;
       return evaluate(B) * (whoIsPlaying ? -1 : 1);
-      // System.err.println("337: " + evalScore + " = " + evaluate(B) + " -> " +
-      // (evalScore == evaluate(B)));
-      // return evalScore * (whoIsPlaying ? -1 : 1);
     }
 
     boolean bSearchPv = true;
@@ -413,9 +415,8 @@ class L13Small {
 
     if (depth <= 0) {
       search_not_finished = true;
-      // System.err.println("404: " + (evalScore == evaluate(B)));
+      evaluateCalls++;
       return evaluate(B) * (whoIsPlaying ? -1 : 1);
-      // return evalScore * (whoIsPlaying ? -1 : 1);
     }
 
     Integer[] possible_moves = reorderMoves(B);
@@ -790,326 +791,7 @@ class L13Small {
     }
     // No player can win in the next move
 
-    int sum = 0;
-    int tmpSum = 0;
-
-    // double POSITION_WEIGHT = 0;
-    double VERTICAL_WEIGHT = 0.3;
-    double HORIZONTAL_WEIGHT = 1.3;
-    double DIAGONAL_WEIGHT = 5;
-
-    // Check the position of my pieces and opponent pieces
-    // The more near the center the more point one piece gets
-    // for (int i = 0; i < B.Rows; i++) {
-    // for (int j = 0; j < B.Columns; j++) {
-    // // switch (B.cellState(B.Rows - i - 1, j)) {
-    // switch (B.cellState(i, j)) {
-    // case 1:
-    // tmpSum += am_i_fist ? evaPositionalMatrix[i][j] : -evaPositionalMatrix[i][j];
-    // break;
-    //
-    // case 2:
-    // tmpSum += am_i_fist ? -evaPositionalMatrix[i][j] : evaPositionalMatrix[i][j];
-    // break;
-    //
-    // case 0:
-    // break;
-    // }
-    // }
-    // }
-    // sum += tmpSum * POSITION_WEIGHT;
-    // tmpSum = 0;
-
-    // Need to check the adjacent pieces
-
-    // Horizontal
-    for (int i = 0; i < B.Rows; i++) {
-      int countMen1 = 0;
-      int countMen2 = 0;
-      int countSpaces1 = 0;
-      int countSpaces2 = 0;
-
-      for (int j = 0; j < B.Columns; j++) {
-
-        int cellState = B.cellState(i, j);
-
-        // Player 1 checks
-        switch (cellState) {
-          case 1:
-            countMen1++;
-            break;
-
-          case 2:
-            if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
-                  (am_i_fist ? 1 : -1);
-            }
-            countMen1 = 0;
-            countSpaces1 = 0;
-            break;
-
-          case 0:
-            // Only count white space if there are men underneath them
-            if (i != 0 && B.cellState(i - 1, j) != 0) {
-              countSpaces1++;
-            }
-            break;
-        }
-
-        // Player 2 checks
-        switch (cellState) {
-          case 1:
-            if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
-                  (!am_i_fist ? 1 : -1);
-            }
-            countMen2 = 0;
-            countSpaces2 = 0;
-            break;
-
-          case 2:
-            countMen2++;
-            break;
-
-          case 0:
-            // Only count white space if there are men underneath them
-            if (i != 0 && B.cellState(i - 1, j) != 0) {
-              countSpaces2++;
-            }
-            break;
-        }
-      }
-
-      // if we didn't hit the opponent men we need to evaluate
-      if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
-            (am_i_fist ? 1 : -1);
-      }
-      if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
-            (!am_i_fist ? 1 : -1);
-      }
-    }
-    sum += tmpSum * HORIZONTAL_WEIGHT;
-    tmpSum = 0;
-
-    // Vertical
-    for (int i = 0; i < B.Columns; i++) {
-      int countMen1 = 0;
-      int countMen2 = 0;
-      int countSpaces1 = 0;
-      int countSpaces2 = 0;
-
-      for (int j = 0; j < B.Rows; j++) {
-
-        int cellState = B.cellState(j, i);
-
-        // Player 1 checks
-        switch (cellState) {
-          case 1:
-            countMen1++;
-            break;
-
-          case 2:
-            countMen1 = 0;
-            countSpaces1 = 0;
-            break;
-
-          case 0:
-            countSpaces1++;
-            break;
-        }
-
-        // Player 2 checks
-        switch (cellState) {
-          case 1:
-            countMen2 = 0;
-            countSpaces2 = 0;
-            break;
-
-          case 2:
-            countMen2++;
-            break;
-
-          case 0:
-            countSpaces2++;
-            break;
-        }
-      }
-      if (countMen1 + countSpaces1 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces1 + countMen1) *
-            (am_i_fist ? 1 : -1);
-      }
-
-      if (countMen2 + countSpaces2 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces2 + countMen2) *
-            (!am_i_fist ? 1 : -1);
-      }
-    }
-    sum += tmpSum * VERTICAL_WEIGHT;
-    tmpSum = 0;
-
-    // Diagonal check
-
-    // https://stackoverflow.com/a/33365042
-
-    // Diagonal \
-    for (int slice = 0; slice < B.Rows + B.Columns - 1; ++slice) {
-      int z2 = slice < B.Rows ? 0 : slice - B.Rows + 1;
-      int z1 = slice < B.Columns ? 0 : slice - B.Columns + 1;
-
-      if (slice - z2 - z1 + 1 < B.ToAlign)
-        continue;
-      // printf("Slice %d (l: /* % */d): ", slice, slice - z2 - z1 + 1);
-
-      int countMen1 = 0;
-      int countMen2 = 0;
-      int countSpaces1 = 0;
-      int countSpaces2 = 0;
-      for (int j = slice - z2; j >= z1; --j) {
-        int cellState = B.cellState(j, slice - j);
-
-        // Player 1 checks
-        switch (cellState) {
-          case 1:
-            countMen1++;
-            break;
-
-          case 2:
-            if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
-                  (am_i_fist ? 1 : -1);
-            }
-            countMen1 = 0;
-            countSpaces1 = 0;
-            break;
-
-          case 0:
-            // // Only count white space if there are men underneath them
-            // if (i != 0 && B.cellState(i - 1, j) != 0) {
-            // countSpaces1++;
-            // }
-            countSpaces1++;
-            break;
-        }
-
-        // Player 2 checks
-        switch (cellState) {
-          case 1:
-            if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
-                  (!am_i_fist ? 1 : -1);
-            }
-            countMen2 = 0;
-            countSpaces2 = 0;
-            break;
-
-          case 2:
-            countMen2++;
-            break;
-
-          case 0:
-            // // Only count white space if there are men underneath them
-            // if (i != 0 && B.cellState(i - 1, j) != 0) {
-            // countSpaces2++;
-            // }
-            countSpaces2++;
-            break;
-        }
-      }
-      // if we didn't hit the opponent men we need to evaluate
-      if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
-            (am_i_fist ? 1 : -1);
-      }
-      if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
-            (!am_i_fist ? 1 : -1);
-      }
-    }
-    sum += tmpSum * DIAGONAL_WEIGHT;
-    tmpSum = 0;
-
-    // Diagonal /
-    for (int slice = 0; slice < B.Columns + B.Rows - 1; ++slice) {
-      int z1 = slice < B.Columns ? 0 : slice - B.Columns + 1;
-      int z2 = slice < B.Rows ? 0 : slice - B.Rows + 1;
-
-      if (slice - z2 - z1 + 1 < B.ToAlign)
-        continue;
-
-      int countMen1 = 0;
-      int countMen2 = 0;
-      int countSpaces1 = 0;
-      int countSpaces2 = 0;
-
-      for (int j = (B.Rows - 1) - slice + z2; j <= (B.Rows - 1) - z1; j++) {
-
-        int cellState = B.cellState(j, j + (slice - B.Rows + 1));
-
-        // Player 1 checks
-        switch (cellState) {
-          case 1:
-            countMen1++;
-            break;
-
-          case 2:
-            if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
-                  (am_i_fist ? 1 : -1);
-            }
-            countMen1 = 0;
-            countSpaces1 = 0;
-            break;
-
-          case 0:
-            // // Only count white space if there are men underneath them
-            // if (i != 0 && B.cellState(i - 1, j) != 0) {
-            // countSpaces1++;
-            // }
-            countSpaces1++;
-            break;
-        }
-
-        // Player 2 checks
-        switch (cellState) {
-          case 1:
-            if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
-                  (!am_i_fist ? 1 : -1);
-            }
-            countMen2 = 0;
-            countSpaces2 = 0;
-            break;
-
-          case 2:
-            countMen2++;
-            break;
-
-          case 0:
-            // // Only count white space if there are men underneath them
-            // if (i != 0 && B.cellState(i - 1, j) != 0) {
-            // countSpaces2++;
-            // }
-            countSpaces2++;
-            break;
-        }
-      }
-      // if we didn't hit the opponent men we need to evaluate
-      if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
-            (am_i_fist ? 1 : -1);
-      }
-      if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
-            (!am_i_fist ? 1 : -1);
-      }
-    }
-
-    sum += tmpSum * DIAGONAL_WEIGHT;
-    tmpSum = 0;
-
-    return sum;
+    return evalScore;
   }
 
   private int evaluate_win(CXBitBoard B) {
