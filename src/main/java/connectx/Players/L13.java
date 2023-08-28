@@ -450,16 +450,16 @@ class L13Small {
     int lastMoveColumn = lastMove.j;
 
     // Check if the next move can make a player win
-    Integer[] cols = B.getAvailableColumns();
-    for (int i : cols) {
-      B.markColumn(i);
-      if (B.gameState() != 2) { // Someone won
-        int val = evaluate_win(B);
-        B.unmarkColumn(); // To avoid messing the board in the caller
-        return val;
-      }
-      B.unmarkColumn();
-    }
+    // Integer[] cols = B.getAvailableColumns();
+    // for (int i : cols) {
+    // B.markColumn(i);
+    // if (B.gameState() != 2) { // Someone won
+    // int val = evaluate_win(B);
+    // B.unmarkColumn(); // To avoid messing the board in the caller
+    // return val;
+    // }
+    // B.unmarkColumn();
+    // }
     // No player can win in the next move
     this.evalScore = decrementalEvaluate(B, lastMoveRow, lastMoveColumn, this.evalScore,
         this.rowScore, this.columnsScore);
