@@ -347,8 +347,7 @@ class L12Small {
     Integer[] cols = B.getAvailableColumns();
     for (int i : cols) {
       B.markColumn(i);
-      int state = B.gameState();
-      if (state != 2) { // Someone won
+      if (B.gameState() != 2) { // Someone won
         int val = evaluate_win(B);
         B.unmarkColumn(); // To avoid messing the board in the caller
         return val;
@@ -360,32 +359,32 @@ class L12Small {
     int sum = 0;
     int tmpSum = 0;
 
-    double POSITION_WEIGHT = Math.sqrt(B.numOfFreeCells());
+    // double POSITION_WEIGHT = 0;
     double VERTICAL_WEIGHT = 0.3;
     double HORIZONTAL_WEIGHT = 1.3;
     double DIAGONAL_WEIGHT = 5;
 
     // Check the position of my pieces and opponent pieces
     // The more near the center the more point one piece gets
-    for (int i = 0; i < B.Rows; i++) {
-      for (int j = 0; j < B.Columns; j++) {
-        // switch (B.cellState(B.Rows - i - 1, j)) {
-        switch (B.cellState(i, j)) {
-          case 1:
-            tmpSum += am_i_fist ? evaPositionalMatrix[i][j] : -evaPositionalMatrix[i][j];
-            break;
-
-          case 2:
-            tmpSum += am_i_fist ? -evaPositionalMatrix[i][j] : evaPositionalMatrix[i][j];
-            break;
-
-          case 0:
-            break;
-        }
-      }
-    }
-    sum += tmpSum * POSITION_WEIGHT;
-    tmpSum = 0;
+    // for (int i = 0; i < B.Rows; i++) {
+    // for (int j = 0; j < B.Columns; j++) {
+    // // switch (B.cellState(B.Rows - i - 1, j)) {
+    // switch (B.cellState(i, j)) {
+    // case 1:
+    // tmpSum += am_i_fist ? evaPositionalMatrix[i][j] : -evaPositionalMatrix[i][j];
+    // break;
+    //
+    // case 2:
+    // tmpSum += am_i_fist ? -evaPositionalMatrix[i][j] : evaPositionalMatrix[i][j];
+    // break;
+    //
+    // case 0:
+    // break;
+    // }
+    // }
+    // }
+    // sum += tmpSum * POSITION_WEIGHT;
+    // tmpSum = 0;
 
     // Need to check the adjacent pieces
 
