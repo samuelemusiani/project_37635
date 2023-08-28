@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.TreeSet;
 import java.util.Stack;
+import connectx.CXCell;
+import connectx.CXCellState;
 
 public class CXBitBoard {
   // Rows
@@ -93,10 +95,10 @@ public class CXBitBoard {
     return (mask & (1l << ((Rows + 1) * col + Rows - 1))) == 0;
   }
 
-  public int getLastMove() {
-    int tmp = MC.pop();
-    MC.push(tmp);
-    return tmp;
+  public CXCell getLastMove() {
+    int tmp = MC.peek();
+
+    return new CXCell(RP[tmp] - 1, tmp, currentPlayer ? CXCellState.P1 : CXCellState.P2);
   }
 
   public int gameState() {
