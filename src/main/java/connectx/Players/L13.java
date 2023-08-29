@@ -477,22 +477,9 @@ class L13Small {
 
   private int incrementalEvaluate(CXBitBoard B) {
     CXCell lastMove = B.getLastMove();
-    // System.err.println("Last move EVAL: " + lastMove.i + " " + lastMove.j);
     int lastMoveRow = lastMove.i;
     int lastMoveColumn = lastMove.j;
 
-    // Check if the next move can make a player win
-    // Integer[] cols = B.getAvailableColumns();
-    // for (int i : cols) {
-    // B.markColumn(i);
-    // if (B.gameState() != 2) { // Someone won
-    // int val = evaluate_win(B);
-    // B.unmarkColumn(); // To avoid messing the board in the caller
-    // return val;
-    // }
-    // B.unmarkColumn();
-    // }
-    // No player can win in the next move
     this.evalScore = decrementalEvaluate(B, lastMoveRow, lastMoveColumn,
         this.evalScore, this.rowScore, this.columnsScore, this.diagonalAScore,
         this.diagonalBScore);
@@ -503,7 +490,7 @@ class L13Small {
       int lastMoveColumn, int evalScore, int[] rowScore, int[] columnsScore,
       int[] diagonalAScore, int[] diagonalBScore) {
 
-    int sum = evalScore;
+    int sum = evalScore * evalScore * (evalScore < 0 ? -1 : 1);
     sum -= rowScore[lastMoveRow];
     sum -= columnsScore[lastMoveColumn];
     sum -= diagonalAScore[lastMoveColumn + lastMoveRow];
@@ -512,9 +499,11 @@ class L13Small {
     // System.err.println("rowScore: " + rowScore[lastMoveRow]);
     // System.err.println("columnsScore: " + columnsScore[lastMoveColumn]);
 
-    double VERTICAL_WEIGHT = 0.3;
-    double HORIZONTAL_WEIGHT = 1.3;
-    double DIAGONAL_WEIGHT = 5;
+    double VERTICAL_WEIGHT = 0.5;
+    double HORIZONTAL_WEIGHT = 1;
+    double DIAGONAL_WEIGHT = 1;
+
+    int MANSPACERATIO = 3;
 
     int tmpSum = 0;
 
@@ -537,7 +526,7 @@ class L13Small {
 
           case 2:
             if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
+              tmpSum += Math.pow(2, (countSpaces1 + countMen1 * MANSPACERATIO)) *
                   (am_i_fist ? 1 : -1);
             }
             countMen1 = 0;
@@ -556,7 +545,7 @@ class L13Small {
         switch (cellState) {
           case 1:
             if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
+              tmpSum += Math.pow(2, (countSpaces2 + countMen2 * MANSPACERATIO)) *
                   (!am_i_fist ? 1 : -1);
             }
             countMen2 = 0;
@@ -578,11 +567,11 @@ class L13Small {
 
       // if we didn't hit the opponent men we need to evaluate
       if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
+        tmpSum += Math.pow(2, (countSpaces1 + countMen1 * MANSPACERATIO)) *
             (am_i_fist ? 1 : -1);
       }
       if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
+        tmpSum += Math.pow(2, (countSpaces2 + countMen2 * MANSPACERATIO)) *
             (!am_i_fist ? 1 : -1);
       }
     }
@@ -634,12 +623,12 @@ class L13Small {
         }
       }
       if (countMen1 + countSpaces1 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces1 + countMen1) *
+        tmpSum += Math.pow(2, (countSpaces1 + countMen1)) *
             (am_i_fist ? 1 : -1);
       }
 
       if (countMen2 + countSpaces2 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces2 + countMen2) *
+        tmpSum += Math.pow(2, (countSpaces2 + countMen2)) *
             (!am_i_fist ? 1 : -1);
       }
     }
@@ -679,7 +668,7 @@ class L13Small {
 
           case 2:
             if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
+              tmpSum += Math.pow(2, (countSpaces1 + countMen1 * MANSPACERATIO)) *
                   (am_i_fist ? 1 : -1);
             }
             countMen1 = 0;
@@ -699,7 +688,7 @@ class L13Small {
         switch (cellState) {
           case 1:
             if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
+              tmpSum += Math.pow(2, (countSpaces2 + countMen2 * MANSPACERATIO)) *
                   (!am_i_fist ? 1 : -1);
             }
             countMen2 = 0;
@@ -721,11 +710,11 @@ class L13Small {
       }
       // if we didn't hit the opponent men we need to evaluate
       if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
+        tmpSum += Math.pow(2, (countSpaces1 + countMen1 * MANSPACERATIO)) *
             (am_i_fist ? 1 : -1);
       }
       if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
+        tmpSum += Math.pow(2, (countSpaces2 + countMen2 * MANSPACERATIO)) *
             (!am_i_fist ? 1 : -1);
       }
     }
@@ -759,7 +748,7 @@ class L13Small {
 
           case 2:
             if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
+              tmpSum += Math.pow(2, (countSpaces1 + countMen1 * MANSPACERATIO)) *
                   (am_i_fist ? 1 : -1);
             }
             countMen1 = 0;
@@ -779,7 +768,7 @@ class L13Small {
         switch (cellState) {
           case 1:
             if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-              tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
+              tmpSum += Math.pow(2, (countSpaces2 + countMen2 * MANSPACERATIO)) *
                   (!am_i_fist ? 1 : -1);
             }
             countMen2 = 0;
@@ -801,11 +790,11 @@ class L13Small {
       }
       // if we didn't hit the opponent men we need to evaluate
       if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces1 + countMen1 * 2) *
+        tmpSum += Math.pow(2, (countSpaces1 + countMen1 * MANSPACERATIO)) *
             (am_i_fist ? 1 : -1);
       }
       if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.ToAlign) {
-        tmpSum += 2 * (countSpaces2 + countMen2 * 2) *
+        tmpSum += Math.pow(2, (countSpaces2 + countMen2 * MANSPACERATIO)) *
             (!am_i_fist ? 1 : -1);
       }
     }
@@ -813,6 +802,8 @@ class L13Small {
     sum += tmpSum * DIAGONAL_WEIGHT;
     diagonalBScore[lastMoveRow + lastMoveColumn] = (int) (tmpSum * VERTICAL_WEIGHT);
     tmpSum = 0;
+
+    sum = (int) Math.sqrt(Math.abs(sum)) * (sum < 0 ? -1 : 1);
 
     evalScore = sum;
     return evalScore;
