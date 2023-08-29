@@ -252,7 +252,7 @@ class L13Small {
   }
 
   private void checktime() throws TimeoutException {
-    if ((System.currentTimeMillis() - START) / 1000.0 >= TIMEOUT * (98.0 / 100.0))
+    if ((System.currentTimeMillis() - START) / 1000.0 >= TIMEOUT * (99.0 / 100.0))
       throw new TimeoutException();
   }
 
@@ -291,8 +291,8 @@ class L13Small {
 
   private int move_pvSearch(CXBitBoard B, int depth) throws TimeoutException {
     checktime();
-    int alpha = Integer.MIN_VALUE + 5;
-    int beta = Integer.MAX_VALUE - 5;
+    int alpha = -(B.numOfFreeCells() / 2) - MAXSCORE;
+    int beta = (B.numOfFreeCells() + 1) / 2 + MAXSCORE;
     boolean bSearchPv = true;
     Integer[] possible_moves = reorderMoves(B);
     int move = possible_moves[0];
