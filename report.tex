@@ -1,0 +1,163 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
+\usepackage{epigraph}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title{\textbf{Hopeless}\\
+\vspace{0.2cm}\normalsize Relazione del progetto per il corso di Algoritmi\\
+\normalsize Università di Bologna}
+
+\author{
+  E. Argonni,
+  S. Musiani
+}
+
+\date{2022 - 2023}
+
+\begin{document}
+
+\maketitle
+
+\vspace{1cm}
+\textit{"The important thing isn't can you read music, it's can you hear it.
+  Can you here the music?"}
+
+% \newpage
+% \tableofcontents
+% \newpage
+\vfill
+
+\section{Introduzione}
+
+Il progetto consisteva nello sviluppare un programma che sapesse giocare nel 
+miglior modo possibile il gioco \emph{Connect X}. Quest'ultimo consiste in una
+generalizzazione del classico gioco Forza 4 resa possibile da delle 
+configurazioni che si distaccavano dalla classica tabella $6 \times 7$ presente 
+nel gioco originale e che venivano fornite dal docente.
+
+\section{Il giocatore Small e Big}
+
+Se si da una veloce occhiata al codice si nota che in realtà il giocatore è 
+diviso in due: Small e Big. Questa distinzione apparentemente arbitraria è 
+necessaria in quanto, come spiegato più avanti nella sezione \ref{sec_bitboard},
+la rappresentazione della tabella di gioco tramite Bitboard è possibile solo 
+fino alla configurazione $7 \times 7$. Dove possibile quindi è stata adottata 
+questa rappresentazione, mentre dove non lo era è stata mantenuta la classica
+CXBoard fornita dal docente. Per questo il nome Small e Big: il gicatore Small 
+può giocare solo le configurazioni più piccole della $7 \times 7$ compresa, 
+mentre il giocatore Big, nonostante possa giocare tutte le configurazioni, si 
+limita a quelle rimanenti.
+
+\section{Caratteristiche generali}
+
+Nonostante la divisione dei due giocatori in Small e Big, molti aspetti 
+rimangono gli stessi tra i due. Di seguito sono quindi presentati tutti gli 
+aspetti comuni ai due giocatori, lasciando per ultimi gli aspetti in cui 
+differiscono.
+
+\subsection{PVS}
+Forza 4, e di conseguenza anche Connect X, è un gioco a somma-zero e ad 
+informazione perfetta. Queste due proprietà del gioco permettono di implementare
+una ricerca basata su MiniMax. Alla base di un qualsiasi giocatore artificiale
+vi è infatti un algoritmo di ricerca che permette di esplorare l'albero di tutte
+le mosse possibili e determinare quali sono vincenti e quali sono perdenti. In
+particolare MiniMax è alla base della ricerca nei giochi a somma-zero e ad 
+informazione perfetta.
+
+L'algoritmo MiniMax, nonostante sia perfettamente funzionante e ritorni sempre
+la mossa migliore, è particolarmente inefficiente in quanto richiede di 
+esplorare l'intero albero di gioco. Questo porta a dei costi computazionali 
+estremamente elevati. Prendiamo per esempio la classica configurazione di Forza 
+4 con 6 righe e 7 colonne. Se volessi calcolare l'intero albero di gioco, e 
+quindi tutte le possibili configurazioni che si possono ottenere, dovremmo 
+considerare $3^{7 \cdot 6} = 3^{42} \approx 1.09 \cdot 10^{20}$. In realtà 
+questo è un limite superiore, in quanto molte di queste configurazioni non 
+sarebbero valide. Nonostante ciò le configurazioni restano comunque troppe per
+essere esplorate tutte in un tempo accettabile. Sono stati quindi inventati 
+degli ulteriori algoritmi, che si basano comunque su MiniMax, ma che sono molto 
+più efficienti rispetto a quest'ultimo. Il più famoso è AlphaBeta.
+
+Non riteniamo necessario spiegare il funzionamento di MiniMax e AlphaBeta, ma 
+bensì riteniamo necessario approfondire la variate di AlphaBeta adottata nel 
+nostro giocatore: PVS, o meglio Principal Variation Search.
+
+% \begin{algorithm}[H]
+%   \caption{\textsc{PrincipalVariationSearch}}
+%   \label{alg:pvs}
+%   \begin{algorithmic}[0]
+%     \Procedure {PVS}{$Board$, $\alpha$, $\beta$, $\alpha$, $color$}
+%       \State $best\_cell \gets null, \, best\_value \gets -\infty$
+%       \If{$depth = 0$ \textbf{or} $node$ is a leaf}
+%         \State \Return $color \cdot \Call{Evaluate}{node}$
+%       
+%       \ElsIf{$best\_cell \gets \Call{FindClosingCell}{node}$ is \textbf{not} $null$}
+%         \State $child \gets \Call{mark}{node, best\_cell}$
+%         \State $(best\_value, \_) \gets -\Call{PVS}{child, -color, depth-1, -\beta, -\alpha}$
+%       \Else
+%         \For{$child$ \textbf{in} \Call{Sorted}{\textrm{children of} $node$}}
+%           \If{$child$ is the first}
+%             \Comment{\`E la \emph{Principal Variation}}
+%             \State $score \gets -\Call{PVS}{child, -color, depth-1, -\beta, -\alpha}\}$
+%             \State $\alpha \gets \max\{\alpha, score\}$
+%           \Else
+%             \Comment{Proviamo con una \emph{ricerca a finestra nulla}}
+%             \State $score \gets -\Call{PVS}{child, -color, depth-1, -\alpha-1, -\alpha}\}$
+%             \If{$\alpha < score < \beta$}
+%               \Comment{\`E un nodo interessante}
+%               \State $score \gets -\Call{PVS}{child, -color, depth-1, -\beta, -\alpha}\}$
+%               \State $\alpha \gets \max\{\alpha, score\}$
+%             \EndIf
+%           \EndIf
+%           \If{$score > value$}
+%             \State $best\_value \gets score$
+%             \State $best\_cell \gets $ the last move of $child$
+%           \EndIf
+%           \If{$value \geq \beta$}
+%             \Comment{Potatura $\alpha$-$\beta$}
+%             \State \textbf{break}
+%           \EndIf
+%         \EndFor
+%       \EndIf
+%       \State \Return $(best\_value, best\_cell)$
+%     \EndProcedure
+%   \end{algorithmic}
+% \end{algorithm}
+
+Come funziona
+Speudo codice
+Perhché è più veloce
+
+\subsection{Iterative deepening}
+Perché serve e come funziona
+
+\subsection{Transposition table}
+Come funziona
+Non è necessaria, ma aiuta ad evitare calcoli.
+
+\subsection{Ordine delle mosse}
+Ordinamento centrale
+(Test sulla PV?)
+
+\subsection{Euristica}
+\subsubsection{Come viene valutata una posizione}
+\subsubsection{Euristica incrementale}
+\subsubsection{Miglioramenti riscontrati}
+\subsubsection{Ammortizzazione e valori quadratici}
+
+\section{Bitboard in Small}
+\label{sec_bitboard}
+\subsection{Funzionamento}
+\subsection{Valutazione di una vittoria}
+\subsection{Controllo di una casella specifica}
+\subsection{Hash per la Transposition table}
+\subsection{Miglioramenti riscontrati}
+
+\section{Zobrist: hash per Big}
+
+\section{Possibili miglioramenti}
+\section{Conclusione}
+
+\end{document}
+
