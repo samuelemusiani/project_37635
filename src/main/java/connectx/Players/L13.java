@@ -75,12 +75,14 @@ class L13Small {
   private int evalScore;
   private int[] rowScore;
   private int[] columnsScore;
-  // TODO diagonal score
+  private int[] diagonalAScore;
+  private int[] diagonalBScore;
 
   private int oldEvalScore;
   private int[] oldRowScore;
   private int[] oldColumnsScore;
-  // TODO oldDiagonal score
+  private int[] oldDiagonalAScore;
+  private int[] oldDiagonalBScore;
 
   // Iterative deepening
   private int current_best_move;
@@ -159,10 +161,14 @@ class L13Small {
     evalScore = 0;
     rowScore = new int[Rows];
     columnsScore = new int[Columns];
+    diagonalAScore = new int[Rows + Columns]; // Upper bound
+    diagonalBScore = new int[Rows + Columns]; // Upper bound
 
     oldEvalScore = 0;
     oldRowScore = new int[Rows];
     oldColumnsScore = new int[Columns];
+    oldDiagonalAScore = new int[Rows + Columns]; // Upper bound
+    oldDiagonalBScore = new int[Rows + Columns]; // Upper bound
 
     for (int i = 0; i < Rows; i++) {
       rowScore[i] = 0;
@@ -172,6 +178,13 @@ class L13Small {
     for (int i = 0; i < Columns; i++) {
       columnsScore[i] = 0;
       oldColumnsScore[i] = 0;
+    }
+
+    for (int i = 0; i < Columns + Rows; i++) {
+      diagonalAScore[i] = 0;
+      diagonalBScore[i] = 0;
+      oldDiagonalAScore[i] = 0;
+      oldDiagonalBScore[i] = 0;
     }
   }
 
@@ -184,7 +197,8 @@ class L13Small {
 
       // I don't need to check if i can win
       oldEvalScore = decrementalEvaluate(board, c.i, c.j, this.oldEvalScore,
-          this.oldRowScore, this.oldColumnsScore);
+          this.oldRowScore, this.oldColumnsScore, this.oldDiagonalAScore,
+          this.oldDiagonalBScore);
     }
 
     evalScore = oldEvalScore;
@@ -194,6 +208,11 @@ class L13Small {
 
     for (int i = 0; i < Columns; i++)
       columnsScore[i] = oldColumnsScore[i];
+
+    for (int i = 0; i < Columns + Rows; i++) {
+      diagonalAScore[i] = oldDiagonalAScore[i];
+      diagonalBScore[i] = oldDiagonalBScore[i];
+    }
 
     Integer[] L = reorderMoves(board);
     current_best_move = L[0];
@@ -211,7 +230,8 @@ class L13Small {
 
       CXCell c = board.getLastMove();
       oldEvalScore = decrementalEvaluate(board, c.i, c.j, this.oldEvalScore,
-          this.oldRowScore, this.oldColumnsScore);
+          this.oldRowScore, this.oldColumnsScore, this.oldDiagonalAScore,
+          this.oldDiagonalBScore);
 
       System.err.println("EvaluateCalls: " + evaluateCalls);
 
@@ -224,9 +244,8 @@ class L13Small {
       board.markColumn(current_best_move);
       CXCell c = board.getLastMove();
       oldEvalScore = decrementalEvaluate(board, c.i, c.j, this.oldEvalScore,
-          this.oldRowScore, this.oldColumnsScore);
-
-      // System.err.println("EvaluateCalls: " + evaluateCalls);
+          this.oldRowScore, this.oldColumnsScore, this.oldDiagonalAScore,
+          this.oldDiagonalBScore);
 
       return current_best_move;
     }
@@ -287,6 +306,8 @@ class L13Small {
       int preEvalScore = evalScore;
       int preRowScore = rowScore[c.i];
       int preColumnScore = columnsScore[c.j];
+      int preDiagonalAScore = diagonalAScore[c.i + c.j];
+      int preDiagonalBScore = diagonalBScore[c.i + c.j];
       incrementalEvaluate(B);
 
       // System.err.println("285: " + evalScore + " = " + evaluate(B) + " -> " +
@@ -323,6 +344,8 @@ class L13Small {
       evalScore = preEvalScore;
       rowScore[c.i] = preRowScore;
       columnsScore[c.j] = preColumnScore;
+      diagonalAScore[c.i + c.j] = preDiagonalAScore;
+      diagonalBScore[c.i + c.j] = preDiagonalBScore;
 
       if (score > alpha) {
         alpha = score;
@@ -360,6 +383,8 @@ class L13Small {
       int preEvalScore = evalScore;
       int preRowScore = rowScore[c.i];
       int preColumnScore = columnsScore[c.j];
+      int preDiagonalAScore = diagonalAScore[c.i + c.j];
+      int preDiagonalBScore = diagonalBScore[c.i + c.j];
       incrementalEvaluate(B);
 
       // System.err.println("355: " + evalScore + " = " + evaluate(B) + " -> " +
@@ -393,6 +418,8 @@ class L13Small {
       evalScore = preEvalScore;
       rowScore[c.i] = preRowScore;
       columnsScore[c.j] = preColumnScore;
+      diagonalAScore[c.i + c.j] = preDiagonalAScore;
+      diagonalBScore[c.i + c.j] = preDiagonalBScore;
 
       if (score >= beta)
         return beta;
@@ -428,6 +455,8 @@ class L13Small {
       int preEvalScore = evalScore;
       int preRowScore = rowScore[c.i];
       int preColumnScore = columnsScore[c.j];
+      int preDiagonalAScore = diagonalAScore[c.i + c.j];
+      int preDiagonalBScore = diagonalBScore[c.i + c.j];
       incrementalEvaluate(B);
 
       int score = -fastSearch(B, 1 - beta, depth - 1, !whoIsPlaying);
@@ -437,6 +466,8 @@ class L13Small {
       evalScore = preEvalScore;
       rowScore[c.i] = preRowScore;
       columnsScore[c.j] = preColumnScore;
+      diagonalAScore[c.i + c.j] = preDiagonalAScore;
+      diagonalBScore[c.i + c.j] = preDiagonalBScore;
 
       if (score >= beta)
         return beta;
@@ -695,6 +726,7 @@ class L13Small {
       }
     }
     sum += tmpSum * DIAGONAL_WEIGHT;
+    diagonalAScore[lastMoveRow + lastMoveColumn] = (int) (tmpSum * VERTICAL_WEIGHT);
     tmpSum = 0;
 
     // Diagonal /
@@ -775,6 +807,7 @@ class L13Small {
     }
 
     sum += tmpSum * DIAGONAL_WEIGHT;
+    diagonalBScore[lastMoveRow + lastMoveColumn] = (int) (tmpSum * VERTICAL_WEIGHT);
     tmpSum = 0;
 
     evalScore = sum;
