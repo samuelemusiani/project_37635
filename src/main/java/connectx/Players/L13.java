@@ -493,17 +493,21 @@ class L13Small {
     // B.unmarkColumn();
     // }
     // No player can win in the next move
-    this.evalScore = decrementalEvaluate(B, lastMoveRow, lastMoveColumn, this.evalScore,
-        this.rowScore, this.columnsScore);
+    this.evalScore = decrementalEvaluate(B, lastMoveRow, lastMoveColumn,
+        this.evalScore, this.rowScore, this.columnsScore, this.diagonalAScore,
+        this.diagonalBScore);
     return this.evalScore;
   }
 
   private int decrementalEvaluate(CXBitBoard B, int lastMoveRow,
-      int lastMoveColumn, int evalScore, int[] rowScore, int[] columnsScore) {
+      int lastMoveColumn, int evalScore, int[] rowScore, int[] columnsScore,
+      int[] diagonalAScore, int[] diagonalBScore) {
 
     int sum = evalScore;
     sum -= rowScore[lastMoveRow];
     sum -= columnsScore[lastMoveColumn];
+    sum -= diagonalAScore[lastMoveColumn + lastMoveRow];
+    sum -= diagonalBScore[lastMoveColumn + lastMoveRow];
 
     // System.err.println("rowScore: " + rowScore[lastMoveRow]);
     // System.err.println("columnsScore: " + columnsScore[lastMoveColumn]);
