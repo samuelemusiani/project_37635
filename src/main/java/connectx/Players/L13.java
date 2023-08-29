@@ -325,7 +325,7 @@ class L13Small {
         } else {
           fastSearches++;
           score = -fastSearch(B, -alpha, depth - 1, true);
-          if (score > alpha /* && score < beta */) { // fail-soft need to research
+          if (score > alpha && score < beta) { // fail-soft need to research
             fullSearches++;
             score = -pvSearch(B, -beta, -alpha, depth - 1, true);
           }
@@ -402,7 +402,7 @@ class L13Small {
         } else {
           fastSearches++;
           score = -fastSearch(B, -alpha, depth - 1, !whoIsPlaying);
-          if (score > alpha /* && score < beta */) { // fail-soft need to research
+          if (score > alpha && score < beta) { // fail-soft need to research
             fullSearches++;
             score = -pvSearch(B, -beta, -alpha, depth - 1, !whoIsPlaying);
           }
