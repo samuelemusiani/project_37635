@@ -416,7 +416,7 @@ class L13Small {
       return evaluate(B) * (whoIsPlaying ? -1 : 1);
     }
 
-    Integer[] possible_moves = reorderMoves(B);
+    Integer[] possible_moves = B.getAvailableColumns();
     for (int i : possible_moves) {
       B.markColumn(i);
       // Incremental Evaluation
@@ -1255,7 +1255,7 @@ class L13Big {
       return evaluate(B) * (whoIsPlaying ? -1 : 1);
     }
 
-    Integer[] possible_moves = reorderMoves(B);
+    Integer[] possible_moves = B.getAvailableColumns();
     for (int i : possible_moves) {
       B.markColumn(i);
       // Incremental Evaluation
