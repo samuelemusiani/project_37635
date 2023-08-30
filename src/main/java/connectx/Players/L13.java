@@ -535,9 +535,14 @@ class L13Small {
 
           case 0:
             // Only count white space if there are men underneath them
-            if (lastMoveRow != 0 && B.cellState(lastMoveRow - 1, j) != 0) {
+            // if (lastMoveRow != 0 && B.cellState(lastMoveRow - 1, j) != 0) {
+            // countSpaces1++;
+            // }
+
+            if (j % 2 == 0)
               countSpaces1++;
-            }
+            else
+              countSpaces1 += 2;
             break;
         }
 
@@ -558,9 +563,14 @@ class L13Small {
 
           case 0:
             // Only count white space if there are men underneath them
-            if (lastMoveRow != 0 && B.cellState(lastMoveRow - 1, j) != 0) {
+            // if (lastMoveRow != 0 && B.cellState(lastMoveRow - 1, j) != 0) {
+            // countSpaces2++;
+            // }
+
+            if (j % 2 == 0)
               countSpaces2++;
-            }
+            else
+              countSpaces2 += 2;
             break;
         }
       }
@@ -680,7 +690,10 @@ class L13Small {
             // if (i != 0 && B.cellState(i - 1, j) != 0) {
             // countSpaces1++;
             // }
-            countSpaces1++;
+            if ((slice - j) % 2 == 0)
+              countSpaces1++;
+            else
+              countSpaces1 += 2;
             break;
         }
 
@@ -704,7 +717,10 @@ class L13Small {
             // if (i != 0 && B.cellState(i - 1, j) != 0) {
             // countSpaces2++;
             // }
-            countSpaces2++;
+            if ((slice - j) % 2 == 1)
+              countSpaces2++;
+            else
+              countSpaces2 += 2;
             break;
         }
       }
@@ -760,7 +776,11 @@ class L13Small {
             // if (i != 0 && B.cellState(i - 1, j) != 0) {
             // countSpaces1++;
             // }
-            countSpaces1++;
+
+            if ((slice - j) % 2 == 0)
+              countSpaces1++;
+            else
+              countSpaces1 += 2;
             break;
         }
 
@@ -784,7 +804,10 @@ class L13Small {
             // if (i != 0 && B.cellState(i - 1, j) != 0) {
             // countSpaces2++;
             // }
-            countSpaces2++;
+            if ((slice - j) % 2 == 1)
+              countSpaces2++;
+            else
+              countSpaces2 += 2;
             break;
         }
       }
