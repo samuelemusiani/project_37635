@@ -58,12 +58,12 @@ aspetti comuni ai due giocatori, lasciando per ultimi gli aspetti in cui
 differiscono.
 
 \subsection{PVS}
-Forza 4, e di conseguenza anche Connect X, è un gioco a somma-zero e ad 
+Forza 4, e di conseguenza anche Connect X, è un gioco a somma-zero e a
 informazione perfetta. Queste due proprietà del gioco permettono di implementare
 una ricerca basata su MiniMax. Alla base di un qualsiasi giocatore artificiale
 vi è infatti un algoritmo di ricerca che permette di esplorare l'albero di tutte
 le mosse possibili e determinare quali sono vincenti e quali sono perdenti. In
-particolare MiniMax è alla base della ricerca nei giochi a somma-zero e ad 
+particolare MiniMax è alla base della ricerca nei giochi a somma-zero e a
 informazione perfetta.
 
 L'algoritmo MiniMax, nonostante sia perfettamente funzionante e ritorni sempre
@@ -77,57 +77,120 @@ questo è un limite superiore, in quanto molte di queste configurazioni non
 sarebbero valide. Nonostante ciò le configurazioni restano comunque troppe per
 essere esplorate tutte in un tempo accettabile. Sono stati quindi inventati 
 degli ulteriori algoritmi, che si basano comunque su MiniMax, ma che sono molto 
-più efficienti rispetto a quest'ultimo. Il più famoso è AlphaBeta.
+più efficienti rispetto a quest'ultimo. Il più famoso è AlphaBeta. Non 
+riteniamo necessario spiegare il funzionamento di MiniMax e AlphaBeta, ma bensì 
+vogliamo dedicare parte di questa relazione ad illustrare la variate di 
+AlphaBeta adottata nel nostro giocatore: PVS, o meglio Principal Variation 
+Search.
 
-Non riteniamo necessario spiegare il funzionamento di MiniMax e AlphaBeta, ma 
-bensì riteniamo necessario approfondire la variate di AlphaBeta adottata nel 
-nostro giocatore: PVS, o meglio Principal Variation Search.
+La PVS si basa sul fatto che se esploriamo per prima la linea di gioco 
+principale (la Principal Variation), o meglio quella che entrambi i giocatori 
+considerano migliore, allora risulta quasi superfluo esplorare completamente 
+tutte le altre possibilità di gioco in quanto dovrebbero essere peggiori a 
+quella già vista. Questo però non vuol dire che non le esploriamo, ma bensì che 
+la loro esplorazione è fatta in modo approssimativo in quanto non mira a 
+ottenere un punteggio preciso della variante come farebbe un classico algoritmo 
+AlphaBeta, ma punta a capire soltanto se la variante è migliore di quella 
+considerata come principale. Se la variante è peggiore il giocatore non fa nulla 
+e continua a valutare le altre varianti secondarie finché non le ha concluse, se 
+invece la ricerca veloce su quella variante ha ritornato che in realtà è 
+migliore della principale si esegue una ricerca completa su quella variante per 
+ritornare il punteggio corretto. È necessario infatti puntualizzare che la 
+ricerca veloce non restituisce il punteggio corretto associato a quella 
+variante, ma soltanto se è migliore o peggiore di quella considerata come 
+principale. È quindi necessario eseguire una ricerca completa per determinare il
+punteggio corretto se la variante secondaria risulta essere migliore della 
+principale.
 
-% \begin{algorithm}[H]
-%   \caption{\textsc{PrincipalVariationSearch}}
-%   \label{alg:pvs}
-%   \begin{algorithmic}[0]
-%     \Procedure {PVS}{$Board$, $\alpha$, $\beta$, $\alpha$, $color$}
-%       \State $best\_cell \gets null, \, best\_value \gets -\infty$
-%       \If{$depth = 0$ \textbf{or} $node$ is a leaf}
-%         \State \Return $color \cdot \Call{Evaluate}{node}$
-%       
-%       \ElsIf{$best\_cell \gets \Call{FindClosingCell}{node}$ is \textbf{not} $null$}
-%         \State $child \gets \Call{mark}{node, best\_cell}$
-%         \State $(best\_value, \_) \gets -\Call{PVS}{child, -color, depth-1, -\beta, -\alpha}$
-%       \Else
-%         \For{$child$ \textbf{in} \Call{Sorted}{\textrm{children of} $node$}}
-%           \If{$child$ is the first}
-%             \Comment{\`E la \emph{Principal Variation}}
-%             \State $score \gets -\Call{PVS}{child, -color, depth-1, -\beta, -\alpha}\}$
-%             \State $\alpha \gets \max\{\alpha, score\}$
-%           \Else
-%             \Comment{Proviamo con una \emph{ricerca a finestra nulla}}
-%             \State $score \gets -\Call{PVS}{child, -color, depth-1, -\alpha-1, -\alpha}\}$
-%             \If{$\alpha < score < \beta$}
-%               \Comment{\`E un nodo interessante}
-%               \State $score \gets -\Call{PVS}{child, -color, depth-1, -\beta, -\alpha}\}$
-%               \State $\alpha \gets \max\{\alpha, score\}$
-%             \EndIf
-%           \EndIf
-%           \If{$score > value$}
-%             \State $best\_value \gets score$
-%             \State $best\_cell \gets $ the last move of $child$
-%           \EndIf
-%           \If{$value \geq \beta$}
-%             \Comment{Potatura $\alpha$-$\beta$}
-%             \State \textbf{break}
-%           \EndIf
-%         \EndFor
-%       \EndIf
-%       \State \Return $(best\_value, best\_cell)$
-%     \EndProcedure
-%   \end{algorithmic}
-% \end{algorithm}
+Nel caso peggiore, ovvero quello in cui ogni variante secondaria risulta essere
+migliore della variante principale considerata in precedenza, l'algoritmo PVS 
+risulta essere più lento del classico AlphaBeta. Questo caso pessimo però è 
+molto raro, sopratutto se si integra PVS un riordinamento delle mosse in modo
+da considerare prima quelle che risulta essere più promettenti.
 
-Come funziona
-Speudo codice
-Perhché è più veloce
+Di seguito è presentata una versione in pseudo-codice dell'algoritmo PVS:
+
+\begin{algorithm}[H]
+  \caption{\textsc{PrincipalVariationSearch}}
+  \label{alg:pvs}
+  \begin{algorithmic}[0]
+    \Function {PVS}{$Board$, $\alpha$, $\beta$, $depth$, $color$}
+
+      \If{$depth = 0$ \textbf{or} $node$ is a leaf}
+        \State \Return $color \cdot \Call{Evaluate}{Board}$
+      \EndIf
+      \\
+      \State $bSearchPV \gets true$
+      \For{$move$ \textbf{in} \Call{Sorted}{$Board.availableMoves()$}}
+        \State $B.makeMove(move)$
+        \If{$bSearchPV$}
+          \Comment{\`E la \emph{Principal Variation}}
+          \State $score \gets -\Call{PVS}{B, -beta, -alpha, depth - 1, \textrm{not } color}$
+        \Else
+          \Comment{Ricerca veloce sulle varianti secondarie}
+          \State $score \gets -\Call{fastSearch}{B, -alpha, depth - 1, \textrm{not } color}$
+          \If{$\alpha < score < \beta$}
+            \Comment{\`E un nodo interessante}
+            \State $score \gets -\Call{PVS}{B, -beta, -alpha, depth - 1, \textrm{not } color}\}$
+            \State $\alpha \gets \max\{\alpha, score\}$
+          \EndIf
+        \EndIf
+        \State $B.unamkeMove()$
+        \\
+        \If{$score \geq \beta$}
+        \Comment{Potatura $\alpha$-$\beta$}
+        \State \textbf{return} beta;
+        \EndIf
+        \If{$score > alpha$}
+          \State $\alpha \gets score$
+        \EndIf
+        \State $bSearchPV \gets false$
+      \EndFor
+      \State \Return $alpha$
+    \EndFunction
+
+  \end{algorithmic}
+\end{algorithm}
+
+Si noti che utilizzando la proprietà di somma-zero del gioco preso in analisi, 
+si può utilizzare la stessa funzione di ricerca sia per il giocatore che 
+massimizza sia per il giocatore che minimizza semplicemente negando la chiamata
+alla funzione successiva e invertendo $\alpha$ e $\beta$.
+
+La ricerca principale nell'algoritmo PVS è come un normalissimo AlphaBeta se non
+si considerano le ricerche veloci. La chiamata iniziale di PVS è infatti con i
+parametri $\alpha$ e $\beta$ rispettivamente $-\infty$ e $+\infty$. Quello che 
+però appunto distingue PVS è la ricerca veloce.
+
+La fastSearch non è altro che un AlphaBeta modificato in modo che i parametri 
+$\alpha$ e $\beta$ riducano la finestra talmente tanto da risultare quasi nulla.
+Questo permette di tagliare tantissimi rami e fare in modo che la ricerca sia
+effettivamente più veloce.
+
+\begin{algorithm}
+  \caption{\textsc{fastSearch}}
+  \label{alg:fastSeach}
+  \begin{algorithmic}
+    \Function {fastSearch}{$Board$, $\beta$, $depth$, $color$}
+
+      \If{$depth = 0$ \textbf{or} $node$ is a leaf}
+        \State \Return $color \cdot \Call{Evaluate}{Board}$
+      \EndIf
+      \\
+      \For{$move$ \textbf{in} $Board.availableMoves()$}
+        \State $B.makeMove(move)$
+        \State $score \gets -\Call{fastSearch}{B, 1 - beta, depth - 1, \textrm{not } color}$
+        \State $B.unamkeMove()$
+        \\
+        \If{$score \geq \beta$}
+        \Comment{Potatura $\alpha$-$\beta$}
+        \State \textbf{return} beta;
+        \EndIf
+      \EndFor
+      \State \Return $beta - 1$
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
 
 \subsection{Iterative deepening}
 Perché serve e come funziona
