@@ -193,6 +193,18 @@ effettivamente più veloce.
 \end{algorithm}
 
 \subsection{Iterative deepening}
+Il framework Iterative Deepening (ID) è una tecnica di ricerca adottata come 
+metodo base per la gestione del tempo nella scelta di una mossa negli algoritmi 
+che sfruttano la ricerca in profondità (Depth-First search, DFS) come PVS. 
+L'idea alla base di questa strategia è quella di effettuare una serie 
+di iterazioni dell'algoritmo di ricerca in profondità, aumentando gradualmente 
+la profondità massima dell'albero esplorato. Ad ogni iterazione, l'algoritmo 
+effettua una ricerca in profondità limitata (Depth-Limited search, DLS), e alla
+conclusione memorizza la mossa migliore fino a quel momento trovata. 
+Successivamente ricomincia la ricerca da capo ma con una profondità maggiore.
+Questo procedimento continua fino a che il tempo non scade, momento in cui la 
+mossa migliore fino a quel momento viene ritornata.
+
 Perché serve e come funziona
 
 \subsection{Transposition table}
