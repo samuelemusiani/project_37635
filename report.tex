@@ -290,8 +290,85 @@ table sono affidabili se la profondità è più bassa di quella richiesta nella
 ricerca.
 
 \subsection{Ordine delle mosse}
-Ordinamento centrale
-(Test sulla PV?)
+Quando si devono valutare tutte le possibili mosse in una determinata posizione
+è importante l'ordine con cui si decide di valutarle. L'algoritmo PVS infatti 
+basa proprio il suo principio sulla valutazione della variante principale come 
+prima mossa e tutte le restanti come varianti secondarie. Se infatti si 
+valutasse prima la mossa peggiore, le ricerche rapide di PVS ritornerebbero un
+valore maggiore di quello riscontrato sulla prima ricerca completa e, come visto 
+nella sezione riguardante PVS, questo farebbe perdere tempo al giocatore. Il 
+caso in cui PVS performa meglio in assoluto è quando valuta lo mossa migliore 
+come prima.
+
+La tecnica base per ottenere questo è riordinare le mosse possibili in base 
+al punteggio ottenuto nell'iterazione precedente memorizzato nella Transposition
+table. Se infatti l'ordine non è più quello base che considera le mosse da 
+sinistra a destra, ma bensì quello in cui la mossa con il punteggio maggiore è
+la prima, è molto più probabile che PVS trovi la variazione principale nalla 
+prima mossa e quindi sia molto efficiente.
+
+Nonostante a livello teorico il riordinamento delle mosse in base alla loro 
+valutazione ottenuta nelle iterazioni precedenti sia il modo migliore per 
+riordinare tutte le mosse se si sta utilizzando l'algoritmo PVS, a livello 
+pratico il nostro giocatore non ha riscontrato nessun miglioramento. Questo 
+secondo noi è dovuto a vari aspetti pratici:
+\begin{enumerate}
+  \item L'operazione di sorting fatta sulle mosse non è troppo dispendiosa 
+    se la si considera singolarmente. Se però la si contestualizza 
+    nell'algoritmo totale si scopre che in realtà viene eseguita tantissime 
+    volte. Questo porta ad un rallentamento generale dell'algoritmo che non 
+    riesce più ad esplorare in profondità come rispetto alla versione senza 
+    questo tipo di ordinamento delle mosse.
+
+  \item Per ordinare le mosse è necessario prima leggere i loro valori dalla 
+    tabella delle trasposizioni. Per fare ciò però è necessario avere l'hash 
+    relativo a ogni mossa che si vuole ordinare. Per come viene calcolato 
+    l'hash \footnote{Spiegazioni più dettagliate si troveranno nella sezione
+    dedicata. Per ora è necessario soltanto puntualizzare che l'obbligo di 
+    eseguire una mossa sulla board per sapere l'hash della posizione è legato
+    soltanto alle board piccole ($\leq 7 \times 7$) e non a quelle grandi 
+    ($\geq 20 \times 20$). Nonostante ciò nelle board grandi il costo di 
+    ordinamento di tutte le mosse è molto maggiore risultando comunque in un
+    peggioramento} però è necessario eseguire ogni mossa singolarmente per 
+    ottenerlo e poi annullarla. Questo porta a eseguire e ad annullare ogni 
+    mossa almeno due volte: la prima quando si ordinano le mosse disponibili e 
+    la seconda quando una board. 
+
+  \item Infine la nostra euristica non è sicuramente accurata abbastanza da 
+    assegnare in modo sistematico il valore migliore alla linea principale di 
+    gioco. È quindi probabile che anche con le mosse riordinate la PVS non sia
+    comunque tra le prime, risultando in un rallentamento.
+\end{enumerate}
+
+La soluzione adottata per evitare di ordinare le mosse in ordine di valutazione
+è stata quella di ordinarle rispetto alla loro posizione relativa al centro: 
+mosse più vicine al centro vengono valutate prima di mosse lontane da esso.
+L'algoritmo è quindi il seguente:
+
+\begin{algorithm}
+  \caption{\textsc{reorderMoves}}
+ \begin{algorithmic}
+   \Function{reorderMoves}{Board}
+   \State $possibleMoves[] \gets Board.getPossibleMoves()$
+     \Comment{Le mosse sono ordinate da sinistra a destra}
+     \State $l \gets possibleMoves.length$
+     \State $orderedMoves[]$ is an array of length $l$
+     \State $delta \gets 0$
+     \\
+     \For{$i \gets 0$ \textbf{to} $i < l$ \textbf{step} $i \gets i + 1$}
+       \If{$i$ is odd}
+         \State $delta \gets delta + 1$
+
+         \State $orderedMoves[i] \gets possibleMoves[l / 2 - delta]$
+       \Else
+         \State $orderedMoves[i] \gets possibleMoves[l / 2 + delta]$
+       \EndIf
+     \EndFor
+
+     \State \Return $orderedMoves[]$
+   \EndFunction
+ \end{algorithmic} 
+\end{algorithm}
 
 \subsection{Euristica}
 \subsubsection{Come viene valutata una posizione}
