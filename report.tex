@@ -248,7 +248,7 @@ variazioni all'algoritmo generale descritto sopra per valutare solo le
 profondità in cui entrambi i giocatori hanno lo stesso numero di pedine in 
 gioco. Questo è necessario perché se si valutassero profondità finali con un 
 numero diverso di pedine per i due giocatori, uno di essi risulterebbe sempre in 
-vantaggio. Ovviamente siamo costretti a valutare posizioni intermede in cui il
+vantaggio. Ovviamente siamo costretti a valutare posizioni intermedie in cui il
 primo giocatore avrà posizionato una pedina in più rispetto al secondo, ma 
 questo non avviene nello stadio finale della ricerca in cui è necessario 
 scegliere la mossa migliore.
@@ -266,8 +266,28 @@ quanto siamo praticamente certi di poterla raggiungere nel tempo dato.
 
 \subsection{Transposition table}
 \label{sec_transpositionTable}
-Come funziona
-Non è necessaria, ma aiuta ad evitare calcoli.
+La Transposition table (o tabella delle trasposizioni) è una strutture dati 
+che memorizza le posizioni di gioco esplorate insieme alla loro valutazione. 
+Questo permette di evitare di ricalcolare nuovamente la stessa posizione durante 
+l'esecuzione dell'algoritmo di ricerca. Quando infatti una posizione già 
+memorizzata viene ritrovata, è possibile riutilizzare la valutazione 
+precedentemente calcolata, risparmiando tempo e risorse computazionali.
+Nei giochi da tavolo complessi, come gli scacchi, il Go e Forza 4 il numero di 
+posizioni possibili cresce esponenzialmente all'aumentare della profondità di 
+ricerca. L'impiego delle tabelle di trasposizione riduce notevolmente l'overhead 
+computazionale, poiché evita di ricalcolare le stesse posizioni più volte. 
+Questo è per consentire l'esplorazione di alberi decisionali più profondi.
+
+L'effettiva implementazione della Transposition table è basta sulla classe
+HashTable fornita dalla libreria di Java. La posizione viene memorizzata tramite
+un hash della configurazione di gioco. L'effettivo metodo di hash però 
+differisce per il giocatore Small e il giocatore Big, quindi viene lasciata 
+nelle rispettive sezioni la spiegazione dettagliata del metodo specifico.
+
+Si noti che oltre alla posizione stessa è importante memorizzare la pronfodità
+a cui si è valutata, perché non sempre i valori all'interno della Transposition
+table sono affidabili se la profondità è più bassa di quella richiesta nella
+ricerca.
 
 \subsection{Ordine delle mosse}
 Ordinamento centrale
