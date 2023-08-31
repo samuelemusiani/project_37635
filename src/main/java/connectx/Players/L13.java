@@ -1641,17 +1641,19 @@ class L13Big {
   private int evaluate(CXBoard B) {
 
     // Check if the next move can make a player win
-    Integer[] cols = B.getAvailableColumns();
-    for (int i : cols) {
-      B.markColumn(i);
-      if (B.gameState() != CXGameState.OPEN) { // Someone won
-        int val = evaluate_win(B);
-        B.unmarkColumn(); // To avoid messing the board in the caller
-        return val;
+    if (B.numOfMarkedCells() > B.X * 2) {
+      Integer[] cols = B.getAvailableColumns();
+      for (int i : cols) {
+        B.markColumn(i);
+        if (B.gameState() != CXGameState.OPEN) { // Someone won
+          int val = evaluate_win(B);
+          B.unmarkColumn(); // To avoid messing the board in the caller
+          return val;
+        }
+        B.unmarkColumn();
       }
-      B.unmarkColumn();
+      // No player can win in the next move
     }
-    // No player can win in the next move
 
     return evalScore;
   }
@@ -1667,19 +1669,25 @@ class L13Big {
   }
 
   private Integer[] reorderMoves(CXBoard B) {
-    Integer[] m = B.getAvailableColumns();
-    int l = m.length;
-    Integer[] r = new Integer[l];
+    Integer[] r = B.getAvailableColumns();
 
-    int delta = 0;
+    // int delta = 0;
+    //
+    // for (int i = 0; i < l; i++) {
+    // if (i % 2 == 1)
+    // delta++;
+    //
+    // r[i] = m[l / 2 + (i % 2 == 0 ? 1 : -1) * delta];
+    // }
 
-    for (int i = 0; i < l; i++) {
-      if (i % 2 == 1)
-        delta++;
+    int tmp;
+    tmp = r[0];
+    r[0] = r[B.N / 2];
+    r[B.N / 2] = tmp;
 
-      r[i] = m[l / 2 + (i % 2 == 0 ? 1 : -1) * delta];
-    }
-
+    tmp = r[1];
+    r[1] = r[B.N / 2 + 1];
+    r[B.N / 2 + 1] = tmp;
     return r;
   }
 
