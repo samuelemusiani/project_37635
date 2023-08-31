@@ -112,7 +112,7 @@ Di seguito è presentata una versione in pseudo-codice dell'algoritmo PVS:
 
 \begin{algorithm}[H]
   \caption{\textsc{PrincipalVariationSearch}}
-  \label{alg:pvs}
+  \label{alg_pvs}
   \begin{algorithmic}[0]
     \Function {PVS}{$Board$, $\alpha$, $\beta$, $depth$, $color$}
 
@@ -169,7 +169,7 @@ effettivamente più veloce.
 
 \begin{algorithm}
   \caption{\textsc{fastSearch}}
-  \label{alg:fastSeach}
+  \label{alg_fastSeach}
   \begin{algorithmic}
     \Function {fastSearch}{$Board$, $\beta$, $depth$, $color$}
 
@@ -199,15 +199,73 @@ che sfruttano la ricerca in profondità (Depth-First search, DFS) come PVS.
 L'idea alla base di questa strategia è quella di effettuare una serie 
 di iterazioni dell'algoritmo di ricerca in profondità, aumentando gradualmente 
 la profondità massima dell'albero esplorato. Ad ogni iterazione, l'algoritmo 
-effettua una ricerca in profondità limitata (Depth-Limited search, DLS), e alla
-conclusione memorizza la mossa migliore fino a quel momento trovata. 
-Successivamente ricomincia la ricerca da capo ma con una profondità maggiore.
-Questo procedimento continua fino a che il tempo non scade, momento in cui la 
-mossa migliore fino a quel momento viene ritornata.
+effettua una ricerca in profondità limitata (Depth-Limited search, DLS) e, alla
+conclusione, memorizza la mossa migliore fino a quel momento trovata. 
+Successivamente ricomincia la ricerca con una profondità maggiore. Questo 
+procedimento continua fino a che il tempo non scade, momento in cui la mossa 
+migliore fino a quel momento viene ritornata.
 
-Perché serve e come funziona
+\begin{algorithm}
+  \caption{\textsc{iterativeDeepening}}
+  \label{alg_iterativeDeepening}
+  \begin{algorithmic}
+    \State $previousDepthSearch \gets 2$
+    \Comment{Variabili globali}
+    \State $currentBestMove \gets 0$
+    \\
+    \Function {IterativeDeepening}{$Board$}
+      \State $depth \gets 2$
+      \If{$amIFirst$}
+        \Comment{Sono il primo giocatore}
+        \State $depth \gets \Call{max}{previousDepthSearch - 2, 2}$
+      \Else
+        \State $depth \gets \Call{max}{previousDepthSearch - 2, 1}$ 
+      \EndIf
+      \\
+      \State $searchNotFinished \gets true$
+      \While{searchNotFinished}
+        \Comment{Non ho visitato ancora tutte le foglie} 
+        \State $currentBestMove \gets \Call{movePVS}{Board, depth}$
+        \If{GameTree is all visited}
+          \Comment{Ho visitato tutto l'albero}
+          \State $searchNotFinished \gets false$
+        \EndIf
+        \State $previousDepthSearch \gets depth$
+        \State $depth \gets depth + 2$
+      \EndWhile
+      \State \Return $currentBestMove$
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+\textsc{movePvSearch} è una variante di PVS in cui non viene ritornato il 
+valore della posizione ma bensì la mossa migliore nella posizione attuale.
+
+Si noti che nell'algoritmo presentato la profondità viene inizializzata in base 
+al giocatore che inizia la partita. Inoltre l'aumento ad ogni iterazione della 
+profondità non è di 1 ma bensì di 2. È necessario fare entrambe queste 
+variazioni all'algoritmo generale descritto sopra per valutare solo le 
+profondità in cui entrambi i giocatori hanno lo stesso numero di pedine in 
+gioco. Questo è necessario perché se si valutassero profondità finali con un 
+numero diverso di pedine per i due giocatori, uno di essi risulterebbe sempre in 
+vantaggio. Ovviamente siamo costretti a valutare posizioni intermede in cui il
+primo giocatore avrà posizionato una pedina in più rispetto al secondo, ma 
+questo non avviene nello stadio finale della ricerca in cui è necessario 
+scegliere la mossa migliore.
+
+Se il tempo massimo che il giocatore ha per eseguire una mossa scade durante
+la ricerca PVS, viene ritornata immediatamente la mossa migliore che è salvata
+nella variabile globale $currentBestMove$.
+
+La variabile $previousDepthSearch$ serve per memorizzare la profondità che il
+giocatore ha raggiunto nella precedente chiamata di ID. In questo modo, se nella
+precedente chiamata eseguiamo una ricerca a tutte le profondità fino alla numero 
+$n$, nella chiamata successiva puntiamo direttamente alla profondità $n - 2$ in 
+quanto siamo praticamente certi di poterla raggiungere nel tempo dato.
+
 
 \subsection{Transposition table}
+\label{sec_transpositionTable}
 Come funziona
 Non è necessaria, ma aiuta ad evitare calcoli.
 
