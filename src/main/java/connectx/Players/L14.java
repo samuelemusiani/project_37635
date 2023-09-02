@@ -12,7 +12,7 @@ import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
 /*
- * L12 copy with incremental heursitic
+ * L13 without incrementalEval
  */
 
 public class L14 implements CXPlayer {
