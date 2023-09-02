@@ -634,7 +634,6 @@ class L15Small {
     if (!am_i_fist)
       sum = -sum;
 
-    sum = (int) Math.sqrt(Math.abs(sum)) * (sum < 0 ? -1 : 1);
     return sum;
   }
 
