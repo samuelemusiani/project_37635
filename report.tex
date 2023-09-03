@@ -1,6 +1,7 @@
 \documentclass[a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[italian]{babel}
+\usepackage{amsmath, amssymb, amsfonts}
 \usepackage{epigraph}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -117,7 +118,7 @@ Di seguito è presentata una versione in pseudo-codice dell'algoritmo PVS:
     \Function {PVS}{$Board$, $\alpha$, $\beta$, $depth$, $color$}
 
       \If{$depth = 0$ \textbf{or} $node$ is a leaf}
-        \State \Return $color \cdot \Call{Evaluate}{Board}$
+        \State \Return $color * \Call{Evaluate}{Board}$
       \EndIf
       \\
       \State $bSearchPV \gets true$
@@ -174,7 +175,7 @@ effettivamente più veloce.
     \Function {fastSearch}{$Board$, $\beta$, $depth$, $color$}
 
       \If{$depth = 0$ \textbf{or} $node$ is a leaf}
-        \State \Return $color \cdot \Call{Evaluate}{Board}$
+        \State \Return $color * \Call{Evaluate}{Board}$
       \EndIf
       \\
       \For{$move$ \textbf{in} $Board.availableMoves()$}
@@ -348,7 +349,7 @@ L'algoritmo è quindi il seguente:
 \begin{algorithm}
   \caption{\textsc{reorderMoves}}
  \begin{algorithmic}
-   \Function{reorderMoves}{Board}
+   \Function{reorderMoves}{$Board$}
    \State $possibleMoves[] \gets Board.getPossibleMoves()$
      \Comment{Le mosse sono ordinate da sinistra a destra}
      \State $l \gets possibleMoves.length$
@@ -378,10 +379,150 @@ L'algoritmo è quindi il seguente:
 
 \section{Bitboard in Small}
 \label{sec_bitboard}
+La vera differenza tra il gicatore Big e il giocatore Small e il modo in cui
+viene rappresentata una configurazione di gioco. Il metodo sicuramente più
+intuitivo per rappresentare una posizione di Forza 4 è quello di impegare una 
+matrice in cui ogni cella è direttamente associata ad una cesella della 
+posizione e i valori della matrice indicano se una determinata cella è vuota, 
+è presente una pedina del primo giocatore o è presente una pedina del secondo 
+giocatore.
+
+Questo metodo ovviamente funziona ed è anche molto semplice da implementare. La
+classe fornita dal docente che si occupava delle configurazioni di gioco 
+utilizza infatti una matrice. Il problema della rappresentazione tramite matrice
+sorge quando si deve valutare se un determinato giocatore ha vinto. Per vincere
+in Connect X bisogna allineare esattamente \emph{X} pedine in verticale, 
+orizzontale o diagonale. Quindi il controllo consiste nel guardare tutte le 
+colonne, tutte le righe e infine tutte le diagonali per scoprire se un giocatore
+è riuscito ad allineare \emph{X} pedine. Questo controllo fa eseguito ogni volta
+che un giocatore esegue una mossa, risultando quindi estremamente dispendioso.
+Nella classe CXBoard è però presente un'ottimizzazione: essendo il controllo 
+eseguito per ogni singola mossa giocata, non è necessario controllare tutte le
+righe, colonne e diagonali della posizione, ma soltanto quelle interessate 
+dall'ultima mossa.
+
+Esiste però un modo per rappresentare tutte le configurazioni di gioco tramite
+due interi a 64 bit e controllare se un giocatore ha vinto senza l'utilizzo di
+loop e solo grazie alle operazioni tra bit.
+
 \subsection{Funzionamento}
+Rappresentiamo un board di dimensioni $M \times N$ tramite due interi a 64 bit
+che chiameremo \emph{position} e \emph{mask}. L'idea è quella di associare ogni
+singola cella di una posizione ad un bit della \emph{position} e ad un bit della
+\emph{mask}. Prendiamo la classica tabella di Forza 4 che ha dimensioni $M = 6$ 
+e $N = 7$.
+
+\begin{center}
+  INSERIRE IMMAGINE
+\end{center}
+Ad ogni cella corrisponde il numero del bit indicato. L'intero \emph{position} 
+memorizza la posizione del giocatore che dovrà fare la prossima mossa. In 
+particolare avrà uguale a 1 tutti i bit in cui è presente una sua pedina e a 0
+tutti quelli in cui vi è una pedina dell'avversario o non vi è nessuna pedina. 
+L'intero \emph{mask} memorizza invece le pedine occupate indipendentemente dal
+giocatore. In particolare se celle sono vuote i bit corrispondenti saranno a 0, 
+mentre se le celle contengono una pedina i bit corrispondenti saranno a 1. 
+Vale quindi che quando tutte le celle sono vuote $position = 0$ e $mask = 0$. Se 
+volessimo rappresentare la seguente posizione:
+\begin{center}
+  INSERIRE IMMAGINE
+\end{center}
+Bit e mask assumerebbero questi valori:\medskip
+\begin{center}
+  INSERIRE BIT
+\end{center}
+
+Se si vuole ottenere la posizione del giocatore avversario basta eseguire uno
+XOR tra i bit della \emph{position} e i bit della \emph{mask}. La posizione
+dell'avversario come mostrato in figura infatti risulta essere:
+\begin{center}
+  INSERIRE BIT
+\end{center}
+Si noti come alcuni numeri sono mancati, come se ci fosse una riga fantasma 
+sopra a quelle visibili. Più avanti verrà spiegato perché è necessario 
+utilizzare una riga in più per la rappresentazione.
+
+
+\subsection{Fare una mossa e annullarla}
+Se avessimo usato una semplice matrice per la rappresentazione di una posizione
+di gioco, le mosse dei giocatori sarebbero state effettivamente semplici da
+memorizzare: bastava infatti modificare la cella della matrice associata. 
+Utilizzando però la rappresentazione tramite bit, l'operazione di giocare una
+pedina è leggermente più complicata. 
+
+Innanzitutto ci ricordiamo che la variabile \emph{position} rappresenta la 
+configurazione del giocatore che dovrà giocare la prossima mossa, mentre la 
+variabile \emph{mask} rappresenta le pedine sulla board. Quando un giocatore
+decide di fare una mossa le operazioni che vengono eseguite per memorizzarla
+sono quelle rappresentate nel seguente speudo-codice.
+
+\begin{algorithm}
+  \caption{\textsc{MarkColumn}}
+  \begin{algorithmic}
+    \Function{markColumn}{$col$}
+      \State $position \gets position \oplus mask$
+      \State $mask \gets mask | (mask + (1 \ll (col * (Rows + 1))))$
+      \\
+      \If{\Call{isWinningMove}{}}
+        \If{next to play is Player 2}
+          \State $gameState \gets $ first player win
+        \Else
+          \State $gameState \gets $ second player win 
+        \EndIf
+      \ElsIf{the board if full}
+          \State $gameState \gets $ draw
+      \EndIf
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+Riteniamo che sia necessario dare una spiegazione dei simboli usati:
+\begin{itemize}
+  \item $\oplus$ è il simbolo di XOR tra bit.
+  \item $|$ è il simbolo di OR tra bit.
+  \item $\ll$ è il simbolo di shift a sinistra tra bit.
+  \item $*$ è il simbolo di moltiplicazione tra numeri interi.
+  \item $+$ è il simbolo di somma tra numeri interi.
+\end{itemize}
+Analizziamo quindi le operazioni sequenzialmente: la prima riga mostra come
+venga fatta l'operazione di XOR tra la $position$ e la $mask$. Questo, come già
+spiegato in precedenza, permette di ottenere la posizione dell'avversario. 
+Nonostante quindi la mossa del giocatore corrente non sia ancora stata segnata, 
+la variabile $position$ viene portata a indicare la posizione del giocatore che 
+deve muovere al prossimo turno. Avviene quindi nella seconda riga la 
+memorizzazione della mossa. Essendo ora la variabile $position$ modificata per
+indicare la posizione dell'avversario, è soltanto necessario inserire la mossa
+fatta nella $mask$, in quanto è l'unica a memorizzare le posizione di entrambi i 
+giocatori. Per fare ciò si sposa un singolo bit fino alla cella base della 
+colonna giocata: $1 \ll (col * (Rows + 1)))$, e successivamente lo si somma con
+la maschera: $mask + (1 \ll (col * (Rows + 1))))$. In questo modo, essendo i
+bit ordiati in senso crescente rispetto alle righe, il bit sommato alla base 
+della collona viene "propagato" fino alla prima cella libera di tale colonne, 
+dove quindi il giocatore avrà fatto la sua mossa. Durante la "propagazione" del
+bit però, alcune celle potrebbero diventare nulle in quanto in binario $1 + 1 = 
+10$. È quindi necessario sovrascrivere quelle celle eseguendo un OR tra la 
+$mask$ originale e quella derivata dalla somma con il bit. Facciamo un esempio:
+\begin{center}
+  INSERIRE BIT ESEMPIO
+\end{center}
+
+Quando invece si vuole annullare l'ultima mossa giocata vengono eseguite operazioni
+estremamente simili, solo nell'ordine inverso. In particolare le due operazioni
+chiave sono:
+
+\begin{align*}
+  &mask = mask \oplus (1 \ll ((Rows + 1) * col + row))\\
+  &position = position \oplus mask;
+\end{align*}
+Nella prima riga viene riportato a 0 il bit riguardo la mossa appena giocata,
+mentre nella seconda viene riportata la posizione al giocatore precedente, 
+quello cioè che ha annullato la mossa. Si noti che $Rows$ è il numero di colonne
+totali nella board, mentre $col$ e $row$ sono rispettivamente la colonna e la
+riga in cui l'ultima mossa è stata giocata.
+
 \subsection{Valutazione di una vittoria}
 \subsection{Controllo di una casella specifica}
-\subsection{Hash per la Transposition table}
+\subsection{Hash di una posizione}
 \subsection{Miglioramenti riscontrati}
 
 \section{Zobrist: hash per Big}
