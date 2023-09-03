@@ -938,11 +938,10 @@ class L17Big {
   }
 
   private int evaluate(CXBoard B) {
-    double VERTICAL_WEIGHT = 0.5;
     double HORIZONTAL_WEIGHT = 1;
     double DIAGONAL_WEIGHT = 1;
 
-    int MANSPACERATIO = 3;
+    int MANSPACERATIO = 5;
 
     int sum = 0;
     int tmpSum = 0;
@@ -1022,60 +1021,6 @@ class L17Big {
       }
     }
     sum += tmpSum * HORIZONTAL_WEIGHT;
-    tmpSum = 0;
-
-    // Vertical
-    for (int i = 0; i < B.N; i++) {
-      int countMen1 = 0;
-      int countMen2 = 0;
-      int countSpaces1 = 0;
-      int countSpaces2 = 0;
-
-      for (int j = 0; j < B.M; j++) {
-
-        CXCellState cellState = B.cellState(j, i);
-
-        // Player 1 checks
-        switch (cellState) {
-          case P1:
-            countMen1++;
-            break;
-
-          case P2:
-            countMen1 = 0;
-            countSpaces1 = 0;
-            break;
-
-          case FREE:
-            countSpaces1++;
-            break;
-        }
-
-        // Player 2 checks
-        switch (cellState) {
-          case P1:
-            countMen2 = 0;
-            countSpaces2 = 0;
-            break;
-
-          case P2:
-            countMen2++;
-            break;
-
-          case FREE:
-            countSpaces2++;
-            break;
-        }
-      }
-      if (countMen1 + countSpaces1 >= B.X) {
-        tmpSum += (countSpaces1 + countMen1);
-      }
-
-      if (countMen2 + countSpaces2 >= B.X) {
-        tmpSum += -(countSpaces2 + countMen2);
-      }
-    }
-    sum += tmpSum * VERTICAL_WEIGHT;
     tmpSum = 0;
 
     // Diagonal check
