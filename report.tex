@@ -20,15 +20,15 @@
 \begin{document}
 
 \maketitle
-
-\vspace{1cm}
-\textit{"The important thing isn't can you read music, it's can you hear it.
-  Can you here the music?"}
-
-% \newpage
-% \tableofcontents
-% \newpage
-\vfill
+%
+% \vspace{1cm}
+% \textit{"The important thing isn't can you read music, it's can you hear it.
+%   Can you here the music?"}
+%
+% % \newpage
+% % \tableofcontents
+% % \newpage
+% \vfill
 
 \section{Introduzione}
 
@@ -372,10 +372,9 @@ L'algoritmo è quindi il seguente:
 \end{algorithm}
 
 \subsection{Euristica}
-\subsubsection{Come viene valutata una posizione}
-\subsubsection{Euristica incrementale}
-\subsubsection{Miglioramenti riscontrati}
-\subsubsection{Ammortizzazione e valori quadratici}
+\begin{center}
+  DA FAREEEEEEEEEEEEEEEEE
+\end{center}
 
 \section{Bitboard in Small}
 \label{sec_bitboard}
@@ -521,13 +520,283 @@ totali nella board, mentre $col$ e $row$ sono rispettivamente la colonna e la
 riga in cui l'ultima mossa è stata giocata.
 
 \subsection{Valutazione di una vittoria}
-\subsection{Controllo di una casella specifica}
+Per il momento l'utilizzo di una rappresentazione tramite bit di una 
+configurazione di gioco sembra solo aver complicato maggiormente il codice. 
+La scelta però di adottare questa rappresentazione viene completamente 
+giustificata da come viene valutata una vittoria.
+
+\subsubsection{Allineare 4 pedine}
+Vincere una partita per un giocatore equivale ad allineare 4 pedine consecutive
+in verticale, orizzontale o diagonale. Avendo una rappresentazione tramite bit è
+possibile fare i controlli necessari solo utilizzando operazioni tra di essi.
+L'idea alla base è quella che per allineare 4 pedine, è necessario prima 
+allineare 2 coppie da 2 pedine. Se infatti ci troviamo ad avere 2 coppie da 2
+pedine sulla stessa colonna, e queste coppie sono adiacenti, allora avremo 
+trovato 4 pedine consecutive e uno dei due giocatori avrebbe vinto. Per 
+controllare quindi una vittoria, prima si controllano le coppie e 
+successivamente si controlla se queste ultime sono allineate.
+
+Prendiamo ora una board $5 \time 5$ in cui in una colonna sono presenti 4 pedine
+di uno stesso giocatore, mentre in una ulteriore colonna sono presenti solo 3
+pedine del giocatore avversario. La rappresentazione tramite bit risulterebbe 
+quindi come segue:
+\begin{align*}
+  position &= 000000\; 001111\; 000000\; 000000\; 000000\\
+  mask &= 000000\; 001111\; 000000\; 000111\; 000000\;
+\end{align*}
+Inannzitutto controlliamo se esistono delle coppie: per fare ciò basta eseguire
+un AND tra la $position$ e la $position$ shiftata di un bit a sinistra. Applicato
+all'esempio di prima l'operazione risulta:
+\begin{align*}
+  pairs = &position \land (position \ll 1) =\\
+  &000000\; 001111\; 000000\; 000000\; 000000 \land \\
+  &000000\; 011110\; 000000\; 000000\; 000000 = \\
+  &000000\; 001110\; 000000\; 000000\; 000000\\
+\end{align*}
+Come si può vedere dal risultato finale, le coppie presenti sono 3 e non 2 come
+ci si aspetterebbe. In realtà il risultato è corretto in quanto l'operazione
+considera tutte le coppie, anche quelle già parzialmente analizzate. Se infatti
+abbia 4 pedine, le coppie saranno formate dalle pedine numero $(0-1)$, $(1-2)$ e 
+$(2-3)$.
+
+Infine è necessario controllare che le coppie stesse siano allineate per 
+verificare se il giocatore analizzato ha effettivamente vinto. È però necessario
+che tali coppie non siano perfettamente adiacenti in quanto se eseguissimo le 
+stesse operazioni precedenti considereremmo anche due volte la pedina condivisa 
+tra le coppie. Ne consegue che lo shift verso sinistra va eseguito di 2 bit 
+invece che 1. Risulta quindi:
+\begin{align*}
+  win = &pairs \land (pairs \ll 2) =\\
+  &000000\; 001110\; 000000\; 000000\; 000000 \land \\
+  &000000\; 111000\; 000000\; 000000\; 000000 = \\
+  &000000\; 001000\; 000000\; 000000\; 000000\\
+\end{align*}
+Se il giocatore ha vinto la variabile $win$ sarà diversa da 0, se invece non ha
+nessuna sequenza vincente nessun bit sarà uguale a 1 e quindi la variabile sarà
+nulla.
+
+Facciamo un ulteriore esempio ora considerando una posizione più complessa, come
+la seguente:
+\begin{align*}
+  position &= 000000 \; 001111 \; 000101 \; 000000 \; 000111\\
+  mask &= 000011 \; 001111 \; 001111 \; 000011 \; 011111\\
+\end{align*}
+Controlliamo quindi le pedine che formano delle coppie e successivamente se tali 
+coppie formano una sequenza vincente:
+\begin{align*}
+  pairs = &position \land (position \ll 1) =\\
+  &000000 \; 001111 \; 000101 \; 000000 \; 000111 \land \\
+  &000000 \; 011110 \; 001010 \; 000000 \; 001110 = \\
+  &000000 \; 001110 \; 000000 \; 000000 \; 000110\\
+  \\
+  win = &pairs \land (pairs \ll 2) =\\
+  &000000 \; 001110 \; 000000 \; 000000 \; 000110 \land \\
+  &000000 \; 111000 \; 000000 \; 000000 \; 011000 = \\
+  &000000 \; 001000 \; 000000 \; 000000 \; 000000\\
+\end{align*}
+Il giocatore preso in considerazione ha vinto in quanto $win \neq 0$.\medskip
+
+Per controllare tutte direzioni mancanti le operazioni sono le stesse, con
+l'unica differenza riguardo allo shift. Quest'ultimo infatti corrisponde a 1 bit
+soltanto quando si vuole controllare le pedine verticalmente, mentre deve
+variare se si vogliono controllare le altre direzioni. Lo speudo-codice per il
+controllo di una vittoria con 4 pedine è lasciato di seguito.
+
+\begin{algorithm}
+  \caption{isWinningMove4} 
+  \begin{algorithmic}
+    \Function{isWinningMove4}{$position$}
+      \State $shift \gets Rows + 1$
+      \Comment{Controllo orizzontale}
+      \State $pair \gets position \land (position \ll shift)$
+      \State $win \gets pair \land (pair \ll (2 * shift))$
+      \If{$win \neq 0$}
+        \State \Return{true}
+      \EndIf
+      \\
+      \State $pair \gets position \land (position \ll 1)$
+      \Comment{Controllo verticale}
+      \State $win \gets pair \land (pair \ll 2)$
+      \If{$win \neq 0$}
+        \State \Return{true}
+      \EndIf
+      \\
+      \State $shift \gets Rows$
+      \Comment{Controllo diagonale $\backslash$} 
+      \State $pair \gets position \land (position \ll shift)$
+      \State $win \gets pair \land (pair \ll (2 * shift))$
+      \If{$win \neq 0$}
+        \State \Return{true}
+      \EndIf
+      \\
+      \State $shift \gets Rows + 2$
+      \Comment{Controllo diagonale $\slash$}
+      \State $pair \gets position \land (position \ll shift)$
+      \State $win \gets pair \land (pair \ll (2 * shift))$
+      \If{$win \neq 0$}
+        \State \Return{true}
+      \EndIf
+      \\
+      \State \Return{false}
+      \Comment{Il giocatore non ha vinto, la partita continua}
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+Come è possibile notare, per controllare una vittoria non sono stati utilizzati
+loop, ma soltanto operazioni tra bit.
+
+\subsubsection{Allineare 5 pedine}
+Essendo presenti nel gioco configurazioni in cui la vittoria è data da 5 pedine
+allineate e non più da 4 è necessario fare un piccola modifica al codice. Per 
+controllare infatti che 5 pedine siano allineate, si controlla prima che 4 lo 
+siano e successivamente si controlla che ai lati di quelle 4 ci sia un'ulteriore
+pedina. Prendiamo come esempio la seguente situazione:
+\begin{align*}
+  position &= 000000\; 011111\; 000000\; 000000\; 000000\\
+  mask &= 000000\; 011111\; 000000\; 001111\; 000000\;
+\end{align*}
+Possiamo notare che sulla quarta colonna sono presenti 5 pedine allineate. 
+Eseguiamo quindi gli stessi passaggi illustrati in precedenza per controllare 
+che 4 pedine siano allineate:
+\begin{align*}
+  pairs = &position \land (position \ll 1) =\\
+  &000000\; 011111\; 000000\; 000000\; 000000 \land \\
+  &000000\; 111110\; 000000\; 000000\; 000000 = \\
+  &000000\; 011110\; 000000\; 000000\; 000000\\
+  \\
+  quaterns = &pairs \land (pairs \ll 2) =\\
+  &000000\; 011110\; 000000\; 000000\; 000000 \land \\
+  &000001\; 111000\; 000000\; 000000\; 000000 = \\
+  &000000\; 011000\; 000000\; 000000\; 000000\\
+\end{align*}
+Nell'ultima variabile vedia 2 bit a 1. Questo significa che sono stati trovati
+due gruppi da 4 pedine consecutive: $(0-1-2-3-4)$ e $(1-2-3-4-5)$. È però 
+necessario aggiungere un'ulteriore operazione per verificare se 5 pedine sono
+consecutive, o meglio se esiste un'ulteriore pedina attaccata a un gruppo da 4:
+\begin{align*}
+  win = &position \land (quaterns \ll 1) =\\
+  &000000\; 011111\; 000000\; 000000\; 000000 \land \\
+  &000000\; 110000\; 000000\; 000000\; 000000 = \\
+  &000000\; 010000\; 000000\; 000000\; 000000 = \\
+\end{align*}
+Come visto in precedenza se $win \neq 0$ il giocatore ha vinto. Lo speudo-codice
+è lasciato di seguito.
+
+\begin{algorithm}
+  \caption{isWinningMove5} 
+  \begin{algorithmic}
+    \Function{isWinningMove5}{$position$}
+      \State $shift \gets Rows + 1$
+      \Comment{Controllo orizzontale}
+      \State $pair \gets position \land (position \ll shift)$
+      \State $quaterns \gets pair \land (pair \ll (2 * shift))$
+      \State $win \gets position \land (quaterns \ll shift)$
+      \If{$win \neq 0$}
+        \State \Return{true}
+      \EndIf
+      \\
+      \State $pair \gets position \land (position \ll 1)$
+      \Comment{Controllo verticale}
+      \State $quaterns \gets pair \land (pair \ll 2)$
+      \State $win \gets position \land (quaterns \ll 1)$
+      \If{$win \neq 0$}
+        \State \Return{true}
+      \EndIf
+      \\
+      \State $shift \gets Rows$
+      \Comment{Controllo diagonale $\backslash$} 
+      \State $pair \gets position \land (position \ll shift)$
+      \State $quaterns \gets pair \land (pair \ll (2 * shift))$
+      \State $win \gets position \land (quaterns \ll shift)$
+      \If{$win \neq 0$}
+        \State \Return{true}
+      \EndIf
+      \\
+      \State $shift \gets Rows + 2$
+      \Comment{Controllo diagonale $\slash$}
+      \State $pair \gets position \land (position \ll shift)$
+      \State $quaterns \gets pair \land (pair \ll (2 * shift))$
+      \State $win \gets position \land (quaterns \ll shift)$
+      \If{$win \neq 0$}
+        \State \Return{true}
+      \EndIf
+      \\
+      \State \Return{false}
+      \Comment{Il giocatore non ha vinto, la partita continua}
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+\subsubsection{La riga fantasma}
+Fino a questo momento abbiamo sempre utilizzato una riga in più rispetto alla
+board che volevamo rappresentare. Per rappresentare infatti tutte le 
+configurazioni di un gioco con dimensioni $6 \times 7$ avevamo necessità di 
+utilizzare $7 \cdot 7 = 49$ bit. La ragione dell'impiego di una riga aggiuntiva
+è dovuto a dei falsi positivi che si verrebbero a creare se non la impiegassimo
+nella rappresentazione. Consideriamo la seguente posizione di una board 
+$5 \times 5$ rappresentata senza la riga aggiuntiva:
+\begin{align*}
+  position &= 01000\; 00001\; 11100\; 00001\; 00001\\
+  mask &= 11111\; 00001\; 11111\; 00001\; 00001\;
+\end{align*}
+Nonostante non ci sia nessuna sequenza vincente, i passaggi illustrati in 
+precedenza produrrebbero un falso positivo:
+\begin{align*}
+  pairs = &position \land (position \ll 1) =\\
+  &01000 \; 00001 \; 11100 \; 00001 \; 00001 \land \\
+  &10000 \; 00011 \; 11000 \; 00010 \; 00010 = \\
+  &00000 \; 00001 \; 11000 \; 00000 \; 00000 = \\
+  \\
+  win = &pairs \land (pairs \ll 2) =\\
+  &00000 \; 00001 \; 11000 \; 00000 \; 00000 \land \\
+  &00000 \; 00111 \; 00000 \; 00000 \; 00000 = \\
+  &00000 \; 00001 \; 00000 \; 00000 \; 00000 \\
+\end{align*}
+Come possiamo notare la variavile $win$ è diversa da 0 e quindi dovrebbe esserci
+una vittoria, questo però non è affatto vero. Con l'impiego della riga aggiuntiva
+è però possibile evitare errori di valutazione:
+\begin{align*}
+  position = &001000\; 000001\; 011100\; 000001\; 000001\\
+  mask = &011111\; 000001\; 011111\; 000001\; 000001\; \\
+  \\
+  pairs = &position \land (position \ll 1) =\\
+  &001000 \; 000001 \; 011100 \; 000001 \; 000001 \land \\
+  &010000 \; 000010 \; 111000 \; 000010 \; 000010 = \\
+  &000000 \; 000000 \; 011000 \; 000000 \; 000000 = \\
+  \\
+  win = &pairs \land (pairs \ll 2) =\\
+  &000000 \; 000000 \; 011000 \; 000000 \; 000000 \land \\
+  &000000 \; 000001 \; 100000 \; 000000 \; 000000 = \\
+  &000000 \; 000000 \; 000000 \; 000000 \; 000000 \\
+\end{align*}
+
+% \subsection{Controllo di una casella specifica}
+
+\subsection{Limitazioni rappresentative}
+Compresa la necessità della riga fantasma per la rappresentazione di una 
+posizione è necessari chiedersi in quali configurazioni di gioco è possibile
+utilizzare la rappresentazione tramite bit. Come già visto i bit necessari per
+rappresentare una board di $M$ righe e $N$ colonne sono:
+\begin{equation*}
+  bits = (M + 1) \cdot N
+\end{equation*}
+I calcolatori attuali sono basati su \emph{word} da 64 bit. Questo implica che
+si possono rappresentare soltanto board fino a $8 \times 7 \xrightarrow{} 63\; 
+bits$. Per questo motivo il giocatore è diviso in due: il primo dedicato a tutte 
+le board che possono essere rappresentate tramite bit, e il secondo dedicato a 
+tutte le rimanenti.
+
 \subsection{Hash di una posizione}
-\subsection{Miglioramenti riscontrati}
+Utilizzando una Transposition table è necessario poter calcolare l'hash di una
+determinata posizione. Utilizzando la rappresentazione tramite bit questo è 
+facilmente ottenibile sommando la posizione alla maschera:
+\begin{equation*}
+  hash = position + mask
+\end{equation*}
 
 \section{Zobrist: hash per Big}
 
-\section{Possibili miglioramenti}
 \section{Conclusione}
 
 \end{document}
