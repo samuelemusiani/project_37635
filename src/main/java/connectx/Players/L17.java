@@ -316,10 +316,6 @@ class L17Small {
   }
 
   private int evaluate(CXBitBoard B) {
-    double VERTICAL_WEIGHT = 0.5;
-    double HORIZONTAL_WEIGHT = 1;
-    double DIAGONAL_WEIGHT = 1;
-
     int MANSPACERATIO = 3;
 
     int sum = 0;
@@ -399,61 +395,7 @@ class L17Small {
         tmpSum += -(countSpaces2 + countMen2 * MANSPACERATIO);
       }
     }
-    sum += tmpSum * HORIZONTAL_WEIGHT;
-    tmpSum = 0;
-
-    // Vertical
-    for (int i = 0; i < B.Columns; i++) {
-      int countMen1 = 0;
-      int countMen2 = 0;
-      int countSpaces1 = 0;
-      int countSpaces2 = 0;
-
-      for (int j = 0; j < B.Rows; j++) {
-
-        int cellState = B.cellState(j, i);
-
-        // Player 1 checks
-        switch (cellState) {
-          case 1:
-            countMen1++;
-            break;
-
-          case 2:
-            countMen1 = 0;
-            countSpaces1 = 0;
-            break;
-
-          case 0:
-            countSpaces1++;
-            break;
-        }
-
-        // Player 2 checks
-        switch (cellState) {
-          case 1:
-            countMen2 = 0;
-            countSpaces2 = 0;
-            break;
-
-          case 2:
-            countMen2++;
-            break;
-
-          case 0:
-            countSpaces2++;
-            break;
-        }
-      }
-      if (countMen1 + countSpaces1 >= B.ToAlign) {
-        tmpSum += (countSpaces1 + countMen1);
-      }
-
-      if (countMen2 + countSpaces2 >= B.ToAlign) {
-        tmpSum += -(countSpaces2 + countMen2);
-      }
-    }
-    sum += tmpSum * VERTICAL_WEIGHT;
+    sum += tmpSum;
     tmpSum = 0;
 
     // Diagonal check
@@ -538,7 +480,7 @@ class L17Small {
         tmpSum += -(countSpaces2 + countMen2 * MANSPACERATIO);
       }
     }
-    sum += tmpSum * DIAGONAL_WEIGHT;
+    sum += tmpSum;
     tmpSum = 0;
 
     // Diagonal /
@@ -620,7 +562,7 @@ class L17Small {
       }
     }
 
-    sum += tmpSum * DIAGONAL_WEIGHT;
+    sum += tmpSum;
     tmpSum = 0;
 
     if (!am_i_fist)
