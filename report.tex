@@ -796,6 +796,54 @@ facilmente ottenibile sommando la posizione alla maschera:
 \end{equation*}
 
 \section{Zobrist: hash per Big}
+L'algoritmo di Zobrist è una tecnica largamente utilizzata nella programmazione
+di algoritmi di giochi da tavolo, e serve in particolare a calcolare un valore
+hash per ogni singola configurazione di gioco.
+
+L'idea alla base dell'algoritmo è quella di rappresentare uno stato di gioco
+come un numero intero, ottenuto dalla combinazione di valori associati a 
+singoli pezzi in specifiche posizioni. In particolare esiste un numero associato
+a ogni cella della board, rispettivamente per il giocatore uno o il giocatore 
+due. L'hash di una posizione è quindi ottenuto combinando tutti i numeri 
+relativi alle pedine in gioco e relativi alla loro posizione attraverso 
+l'operazione di XOR.\medskip
+
+Durante l'inizializzazione del giocatore è quindi necessario costruire la 
+matrice in cui verranno salvati i valori associati alle pedine e alla loro 
+posizione. In particolare per ogni cella, se è vuota il valore è 0, se no 
+esistono due valori distinti in base a quale giocatore la occupa con una pedina.
+
+Dato l'hash di una posizione, se si esegue una mossa, per trovare l'hash della
+nuova posizione è semplicemente richiesto fare uno XOR tra il vecchio hash e il
+valore associato alla pedina giocata nella cella interessata. Per annullare la
+mossa il procedimento è il medesimo.
+
+\begin{algorithm}
+  \caption{Zobrist}
+  \begin{algorithmic}
+    \State $position$
+    \Comment{Intero a 64 bit che corrisponde all'hash}
+    \State $table[][]$
+    \Comment{Matrice di interi}
+    \\
+    \Function{initZobrist}{}
+      \State $position \gets 0$
+      \State $table[][]$ matrix of dimensions $2 * Rows$ and $2 * Columns$
+
+      \For{every cell \textbf{in} table}
+      \State $cell \gets $ a random number
+      \EndFor
+    \EndFunction
+    \\
+    \Function{makeMove}{$row$, $col$}
+      \If{player one had played last}
+        \State $position = position \oplus table[row][col]$
+      \Else
+        \State $position = position \oplus table[Rows + row][Columnes + col]$
+      \EndIf
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
 
 \section{Conclusione}
 
