@@ -24,9 +24,6 @@ public class CXBitBoard {
   protected Stack<Integer> MC; // Marked Cells stack (used to undo)
   protected int RP[]; // First free row position
   protected TreeSet<Integer> AC; // Availabe (not full) columns
-  //
-  // // we define characters for players (PR for Red, PY for Yellow)
-  // private final CXCellState[] Player = { CXCellState.P1, CXCellState.P2 };
 
   protected boolean currentPlayer; // currentPlayer plays next move false -> 0, true -> 1
 
@@ -86,7 +83,6 @@ public class CXBitBoard {
   }
 
   public boolean fullColumn(int col) {
-    // return (mask & (1l << ((Rows + 1) * col + Rows - 1))) == 0;
     return RP[col] == Rows;
   }
 
@@ -156,9 +152,7 @@ public class CXBitBoard {
    */
   public void unmarkColumn() {
     Integer col = MC.pop();
-    // System.err.println("UNMark: " + col);
     RP[col]--;
-    // System.err.println("Bit pos: " + ((Rows + 1) * col + RP[col]));
     if (RP[col] == Rows - 1)
       AC.add(col);
 
@@ -178,19 +172,11 @@ public class CXBitBoard {
    * @return List of available column indexes
    */
   public Integer[] getAvailableColumns() {
-    // System.err.println(AC.toString());
-    // if (AC.size() == 0)
-    // System.err.println(MC.toString());
     return AC.toArray(new Integer[AC.size()]);
   }
 
   private boolean isWinningMove() {
-
-    // System.err.println("Position: " + position);
-    // System.err.println("Mask: " + mask);
-
     long tmp_position = this.position ^ mask; // Redefinition
-    // System.err.println("Pos Winning: " + position);
 
     // Horizontal check
     int rowsInc = Rows + 1;
@@ -203,23 +189,14 @@ public class CXBitBoard {
       return true;
     }
 
-    // System.err.println("Horizontal");
-
     // Vertical check
-    // System.err.println("tmp_position: " + tmp_position);
     m = tmp_position & (tmp_position << 1);
-    // System.err.println("m: " + m);
     m = m & (m << 2);
-    // System.err.println("m: " + m);
-    // System.err.println("(tmp_position & (m << 1)): " + (tmp_position & (m <<
-    // 1)));
     if (ToAlign == 4 && m != 0) {
       return true;
     } else if (ToAlign == 5 && (tmp_position & (m << 1)) != 0) {
       return true;
     }
-
-    // System.err.println("Vertical");
 
     // Diagonal \
     m = tmp_position & (tmp_position << Rows);
@@ -229,8 +206,6 @@ public class CXBitBoard {
     } else if (ToAlign == 5 && (tmp_position & (m << Rows)) != 0) {
       return true;
     }
-
-    // System.err.println("Diagonal \\");
 
     // Diagonal /
     rowsInc = Rows + 2;
@@ -242,62 +217,7 @@ public class CXBitBoard {
       return true;
     }
 
-    // System.err.println("Diagonal /");
-
     return false;
-
-    // long position = this.position ^ mask; // Redefinition
-    // // System.err.println("Pos Winning: " + position);
-    //
-    // // Horizontal check
-    // int rowsInc = Rows + 1;
-    // long m = position & (position >>> rowsInc);
-    // m = m & (m >>> (rowsInc * 2));
-    //
-    // if (ToAlign == 4 && m != 0) {
-    // return true;
-    // } else if (ToAlign == 5 && (position & (m >>> rowsInc)) != 0) {
-    // return true;
-    // }
-    //
-    // // System.err.println("Horizontal");
-    //
-    // // Vertical check
-    // m = position & (position >>> 1);
-    // m = m & (m >>> 2);
-    // if (ToAlign == 4 && m != 0) {
-    // return true;
-    // } else if (ToAlign == 5 && (position & (m >>> 1)) != 0) {
-    // return true;
-    // }
-    //
-    // // System.err.println("Vertical");
-    //
-    // // Diagonal \
-    // m = position & (position >>> Rows);
-    // m = m & (m >>> (Rows * 2));
-    // if (ToAlign == 4 && m != 0) {
-    // return true;
-    // } else if (ToAlign == 5 && (position & (m >>> Rows)) != 0) {
-    // return true;
-    // }
-    //
-    // // System.err.println("Diagonal \\");
-    //
-    // // Diagonal /
-    // rowsInc = Rows + 2;
-    // m = position & (position >>> rowsInc);
-    // m = m & (m >>> (rowsInc * 2));
-    // if (ToAlign == 4 && m != 0) {
-    // return true;
-    // } else if (ToAlign == 5 && (position & (m >>> rowsInc)) != 0) {
-    // return true;
-    // }
-    //
-    // // System.err.println("Diagonal /");
-    //
-    // return false;
-    //
   }
 
   public void setPosition(long position) {
@@ -306,10 +226,6 @@ public class CXBitBoard {
 
   public void setMask(long mask) {
     this.mask = mask;
-  }
-
-  public void printMoves() {
-    System.err.println("Moves made:" + MC.toString());
   }
 
   public CXBitBoard copy() {
