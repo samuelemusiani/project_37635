@@ -12,26 +12,26 @@ import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
 /*
- * L12 copy with incremental heursitic
+ * L13 without incrementalEval
  */
 
-public class L13 implements CXPlayer {
+public class L14 implements CXPlayer {
   private boolean isBoardTooBig;
 
-  private L13Small pSmall;
-  private L13Big pBig;
+  private L14Small pSmall;
+  private L14Big pBig;
 
-  public L13() {
+  public L14() {
   }
 
   public void initPlayer(int Rows, int Columns, int ToAlign, boolean first, int timeout_in_secs) {
 
     isBoardTooBig = (Rows + 1) * Columns > 64;
     if (isBoardTooBig) {
-      pBig = new L13Big();
+      pBig = new L14Big();
       pBig.initPlayer(Rows, Columns, ToAlign, first, timeout_in_secs);
     } else {
-      pSmall = new L13Small();
+      pSmall = new L14Small();
       pSmall.initPlayer(Rows, Columns, ToAlign, first, timeout_in_secs);
     }
   }
@@ -45,11 +45,11 @@ public class L13 implements CXPlayer {
   }
 
   public String playerName() {
-    return "L13";
+    return "L14";
   }
 }
 
-class L13Small {
+class L14Small {
   final int MAXSCORE = 1_000_000_000;
 
   private int myWin;
@@ -69,19 +69,6 @@ class L13Small {
   private int evaPositionalMatrix[][];
   private boolean am_i_fist;
 
-  // Incremental
-  private int evalScore;
-  private int[] rowScore;
-  private int[] columnsScore;
-  private int[] diagonalAScore;
-  private int[] diagonalBScore;
-
-  private int oldEvalScore;
-  private int[] oldRowScore;
-  private int[] oldColumnsScore;
-  private int[] oldDiagonalAScore;
-  private int[] oldDiagonalBScore;
-
   // Iterative deepening
   private int current_best_move;
   private boolean search_not_finished;
@@ -95,7 +82,7 @@ class L13Small {
 
   private int evaluateCalls;
 
-  public L13Small() {
+  public L14Small() {
   }
 
   public void initPlayer(int Rows, int Columns, int ToAlign, boolean first, int timeout_in_secs) {
@@ -115,18 +102,6 @@ class L13Small {
     board = new CXBitBoard(Rows, Columns, ToAlign);
 
     evaPositionalMatrix = new int[Rows][Columns];
-    // int max_dist = (int) Math.sqrt(Rows * Rows + Columns * Columns) / 2;
-    // int center_x = Columns / 2;
-    // int center_y = Rows / 2;
-    // // Fill half of the board with value that are larger near the center
-    // for (int i = 0; i < Rows * 4 / 5; i++) {
-    // for (int j = Columns / 2; j < Columns; j++) {
-    // evaPositionalMatrix[i][j] = (int) (2
-    // * (max_dist - Math.sqrt(Math.pow(j - center_x, 2) + Math.pow(i - center_y,
-    // 2))));
-    // }
-    // }
-
     // In this way we can balance the points if black put a men on top of white
     // Basically we don't value height but "centerness"
     for (int i = Columns / 2; i < Columns; i++) {
@@ -153,35 +128,6 @@ class L13Small {
     // System.err.println(Arrays.toString(evaPositionalMatrix[i]));
     // }
 
-    // Incremental evaluation
-    evalScore = 0;
-    rowScore = new int[Rows];
-    columnsScore = new int[Columns];
-    diagonalAScore = new int[Rows + Columns]; // Upper bound
-    diagonalBScore = new int[Rows + Columns]; // Upper bound
-
-    oldEvalScore = 0;
-    oldRowScore = new int[Rows];
-    oldColumnsScore = new int[Columns];
-    oldDiagonalAScore = new int[Rows + Columns]; // Upper bound
-    oldDiagonalBScore = new int[Rows + Columns]; // Upper bound
-
-    for (int i = 0; i < Rows; i++) {
-      rowScore[i] = 0;
-      oldRowScore[i] = 0;
-    }
-
-    for (int i = 0; i < Columns; i++) {
-      columnsScore[i] = 0;
-      oldColumnsScore[i] = 0;
-    }
-
-    for (int i = 0; i < Columns + Rows; i++) {
-      diagonalAScore[i] = 0;
-      diagonalBScore[i] = 0;
-      oldDiagonalAScore[i] = 0;
-      oldDiagonalBScore[i] = 0;
-    }
   }
 
   public int selectColumn(CXBoard B) {
@@ -190,24 +136,6 @@ class L13Small {
     if (B.numOfMarkedCells() > 0) {
       CXCell c = B.getLastMove();
       board.markColumn(c.j);
-
-      // I don't need to check if i can win
-      oldEvalScore = decrementalEvaluate(board, c.i, c.j, this.oldEvalScore,
-          this.oldRowScore, this.oldColumnsScore, this.oldDiagonalAScore,
-          this.oldDiagonalBScore);
-    }
-
-    evalScore = oldEvalScore;
-
-    for (int i = 0; i < Rows; i++)
-      rowScore[i] = oldRowScore[i];
-
-    for (int i = 0; i < Columns; i++)
-      columnsScore[i] = oldColumnsScore[i];
-
-    for (int i = 0; i < Columns + Rows; i++) {
-      diagonalAScore[i] = oldDiagonalAScore[i];
-      diagonalBScore[i] = oldDiagonalBScore[i];
     }
 
     Integer[] L = reorderMoves(board);
@@ -222,21 +150,11 @@ class L13Small {
       // System.err.println("EvaluateCalls: " + evaluateCalls);
       board.markColumn(move);
 
-      CXCell c = board.getLastMove();
-      oldEvalScore = decrementalEvaluate(board, c.i, c.j, this.oldEvalScore,
-          this.oldRowScore, this.oldColumnsScore, this.oldDiagonalAScore,
-          this.oldDiagonalBScore);
-
       System.err.println("EvaluateCalls: " + evaluateCalls);
 
       return move;
     } catch (TimeoutException e) {
       board.markColumn(current_best_move);
-      CXCell c = board.getLastMove();
-      oldEvalScore = decrementalEvaluate(board, c.i, c.j, this.oldEvalScore,
-          this.oldRowScore, this.oldColumnsScore, this.oldDiagonalAScore,
-          this.oldDiagonalBScore);
-
       return current_best_move;
     }
   }
@@ -259,6 +177,7 @@ class L13Small {
     evaluateCalls = 0;
     search_not_finished = true;
     while (search_not_finished) {
+      System.err.println("Depth: " + depth);
       fullSearches = 0;
       fastSearches = 0;
       search_not_finished = false;
@@ -282,15 +201,6 @@ class L13Small {
 
     for (int i : possible_moves) {
       B.markColumn(i);
-
-      // Incremental Evaluation
-      CXCell c = B.getLastMove();
-      int preEvalScore = evalScore;
-      int preRowScore = rowScore[c.i];
-      int preColumnScore = columnsScore[c.j];
-      int preDiagonalAScore = diagonalAScore[c.i + c.j];
-      int preDiagonalBScore = diagonalBScore[c.i + c.j];
-      incrementalEvaluate(B);
 
       long converted_position = B.hash();
 
@@ -316,12 +226,7 @@ class L13Small {
       table_depth.put(converted_position, depth);
       B.unmarkColumn();
 
-      // Reset incremental eval
-      evalScore = preEvalScore;
-      rowScore[c.i] = preRowScore;
-      columnsScore[c.j] = preColumnScore;
-      diagonalAScore[c.i + c.j] = preDiagonalAScore;
-      diagonalBScore[c.i + c.j] = preDiagonalBScore;
+      System.err.println("Score: " + score);
 
       if (score > alpha) {
         alpha = score;
@@ -351,15 +256,6 @@ class L13Small {
     for (int i : possible_moves) {
       B.markColumn(i);
 
-      // Incremental Evaluation
-      CXCell c = B.getLastMove();
-      int preEvalScore = evalScore;
-      int preRowScore = rowScore[c.i];
-      int preColumnScore = columnsScore[c.j];
-      int preDiagonalAScore = diagonalAScore[c.i + c.j];
-      int preDiagonalBScore = diagonalBScore[c.i + c.j];
-      incrementalEvaluate(B);
-
       long converted_position = B.hash();
 
       Integer score = table.get(converted_position);
@@ -384,13 +280,6 @@ class L13Small {
       table_depth.put(converted_position, depth);
 
       B.unmarkColumn();
-      // Reset incremental eval
-      evalScore = preEvalScore;
-      rowScore[c.i] = preRowScore;
-      columnsScore[c.j] = preColumnScore;
-      diagonalAScore[c.i + c.j] = preDiagonalAScore;
-      diagonalBScore[c.i + c.j] = preDiagonalBScore;
-
       if (score >= beta)
         return beta;
 
@@ -419,24 +308,14 @@ class L13Small {
     Integer[] possible_moves = B.getAvailableColumns();
     for (int i : possible_moves) {
       B.markColumn(i);
-      // Incremental Evaluation
-      CXCell c = B.getLastMove();
-      int preEvalScore = evalScore;
-      int preRowScore = rowScore[c.i];
-      int preColumnScore = columnsScore[c.j];
-      int preDiagonalAScore = diagonalAScore[c.i + c.j];
-      int preDiagonalBScore = diagonalBScore[c.i + c.j];
-      incrementalEvaluate(B);
 
-      int score = -fastSearch(B, 1 - beta, depth - 1, !whoIsPlaying);
+      Integer score = table.get(B.hash());
+      Integer score_depth = table_depth.get(B.hash());
+      if (score == null || score_depth < depth) {
+        score = -fastSearch(B, 1 - beta, depth - 1, !whoIsPlaying);
+      }
 
       B.unmarkColumn();
-      // Reset incremental eval
-      evalScore = preEvalScore;
-      rowScore[c.i] = preRowScore;
-      columnsScore[c.j] = preColumnScore;
-      diagonalAScore[c.i + c.j] = preDiagonalAScore;
-      diagonalBScore[c.i + c.j] = preDiagonalBScore;
 
       if (score >= beta)
         return beta;
@@ -444,40 +323,18 @@ class L13Small {
     return beta - 1;
   }
 
-  private int incrementalEvaluate(CXBitBoard B) {
-    CXCell lastMove = B.getLastMove();
-    int lastMoveRow = lastMove.i;
-    int lastMoveColumn = lastMove.j;
-
-    this.evalScore = decrementalEvaluate(B, lastMoveRow, lastMoveColumn,
-        this.evalScore, this.rowScore, this.columnsScore, this.diagonalAScore,
-        this.diagonalBScore);
-    return this.evalScore;
-  }
-
-  private int decrementalEvaluate(CXBitBoard B, int lastMoveRow,
-      int lastMoveColumn, int evalScore, int[] rowScore, int[] columnsScore,
-      int[] diagonalAScore, int[] diagonalBScore) {
-
-    int sum = evalScore * evalScore * (evalScore < 0 ? -1 : 1);
-    sum -= rowScore[lastMoveRow];
-    sum -= columnsScore[lastMoveColumn];
-    sum -= diagonalAScore[lastMoveColumn + lastMoveRow];
-    sum -= diagonalBScore[lastMoveColumn + lastMoveRow];
-
-    // System.err.println("rowScore: " + rowScore[lastMoveRow]);
-    // System.err.println("columnsScore: " + columnsScore[lastMoveColumn]);
-
+  private int evaluate(CXBitBoard B) {
     double VERTICAL_WEIGHT = 0.5;
     double HORIZONTAL_WEIGHT = 1;
     double DIAGONAL_WEIGHT = 1;
 
     int MANSPACERATIO = 3;
 
+    int sum = 0;
     int tmpSum = 0;
 
     // Horizontal
-    {
+    for (int i = 0; i < B.Rows; i++) {
       int countMen1 = 0;
       int countMen2 = 0;
       int countSpaces1 = 0;
@@ -485,7 +342,7 @@ class L13Small {
 
       for (int j = 0; j < B.Columns; j++) {
 
-        int cellState = B.cellState(lastMoveRow, j);
+        int cellState = B.cellState(i, j);
 
         // Player 1 checks
         switch (cellState) {
@@ -555,11 +412,10 @@ class L13Small {
       }
     }
     sum += tmpSum * HORIZONTAL_WEIGHT;
-    rowScore[lastMoveRow] = (int) (tmpSum * HORIZONTAL_WEIGHT);
     tmpSum = 0;
 
     // Vertical
-    {
+    for (int i = 0; i < B.Columns; i++) {
       int countMen1 = 0;
       int countMen2 = 0;
       int countSpaces1 = 0;
@@ -567,7 +423,7 @@ class L13Small {
 
       for (int j = 0; j < B.Rows; j++) {
 
-        int cellState = B.cellState(j, lastMoveColumn);
+        int cellState = B.cellState(j, i);
 
         // Player 1 checks
         switch (cellState) {
@@ -612,7 +468,6 @@ class L13Small {
       }
     }
     sum += tmpSum * VERTICAL_WEIGHT;
-    columnsScore[lastMoveColumn] = (int) (tmpSum * VERTICAL_WEIGHT);
     tmpSum = 0;
 
     // Diagonal check
@@ -620,15 +475,13 @@ class L13Small {
     // https://stackoverflow.com/a/33365042
 
     // Diagonal \
-    diagonal1: {
-      int slice = lastMoveRow + lastMoveColumn;
-
+    for (int slice = 0; slice < B.Rows + B.Columns - 1; ++slice) {
       int z2 = slice < B.Rows ? 0 : slice - B.Rows + 1;
       int z1 = slice < B.Columns ? 0 : slice - B.Columns + 1;
 
       // Avoid checking small diagonals
       if (slice - z2 - z1 + 1 < B.ToAlign)
-        break diagonal1;
+        continue;
 
       // printf("Slice %d (l: /* % */d): ", slice, slice - z2 - z1 + 1);
 
@@ -704,17 +557,15 @@ class L13Small {
       }
     }
     sum += tmpSum * DIAGONAL_WEIGHT;
-    diagonalAScore[lastMoveRow + lastMoveColumn] = (int) (tmpSum * VERTICAL_WEIGHT);
     tmpSum = 0;
 
     // Diagonal /
-    diagonal2: {
-      int slice = lastMoveColumn + lastMoveRow;
+    for (int slice = 0; slice < B.Columns + B.Rows - 1; ++slice) {
       int z1 = slice < B.Columns ? 0 : slice - B.Columns + 1;
       int z2 = slice < B.Rows ? 0 : slice - B.Rows + 1;
 
       if (slice - z2 - z1 + 1 < B.ToAlign)
-        break diagonal2;
+        continue;
 
       int countMen1 = 0;
       int countMen2 = 0;
@@ -792,31 +643,10 @@ class L13Small {
     }
 
     sum += tmpSum * DIAGONAL_WEIGHT;
-    diagonalBScore[lastMoveRow + lastMoveColumn] = (int) (tmpSum * VERTICAL_WEIGHT);
     tmpSum = 0;
 
     sum = (int) Math.sqrt(Math.abs(sum)) * (sum < 0 ? -1 : 1);
-
-    evalScore = sum;
-    return evalScore;
-  }
-
-  private int evaluate(CXBitBoard B) {
-
-    // Check if the next move can make a player win
-    Integer[] cols = B.getAvailableColumns();
-    for (int i : cols) {
-      B.markColumn(i);
-      if (B.gameState() != 2) { // Someone won
-        int val = evaluate_win(B);
-        B.unmarkColumn(); // To avoid messing the board in the caller
-        return val;
-      }
-      B.unmarkColumn();
-    }
-    // No player can win in the next move
-
-    return evalScore;
+    return sum;
   }
 
   private int evaluate_win(CXBitBoard B) {
@@ -847,7 +677,7 @@ class L13Small {
   }
 }
 
-class L13Big {
+class L14Big {
   final int MAXSCORE = 1_000_000_000;
 
   private CXGameState myWin;
@@ -898,7 +728,7 @@ class L13Big {
 
   private int evaluateCalls;
 
-  public L13Big() {
+  public L14Big() {
   }
 
   public void initPlayer(int Rows, int Columns, int ToAlign, boolean first, int timeout_in_secs) {

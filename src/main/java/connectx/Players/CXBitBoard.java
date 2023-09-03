@@ -92,7 +92,8 @@ public class CXBitBoard {
   }
 
   public boolean fullColumn(int col) {
-    return (mask & (1l << ((Rows + 1) * col + Rows - 1))) == 0;
+    // return (mask & (1l << ((Rows + 1) * col + Rows - 1))) == 0;
+    return RP[col] == Rows;
   }
 
   public CXCell getLastMove() {
