@@ -2,7 +2,6 @@ package connectx.Hopeless;
 
 import connectx.CXPlayer;
 import connectx.CXBoard;
-import connectx.Players.CXBitBoard;
 import connectx.CXGameState;
 import connectx.CXCell;
 import connectx.CXCellState;
