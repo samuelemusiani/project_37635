@@ -5,6 +5,8 @@
 \usepackage{epigraph}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{hyperref}
+\usepackage{tikz}
 
 \title{\textbf{Hopeless}\\
 \vspace{0.2cm}\normalsize Relazione del progetto per il corso di Algoritmi\\
@@ -20,15 +22,6 @@
 \begin{document}
 
 \maketitle
-%
-% \vspace{1cm}
-% \textit{"The important thing isn't can you read music, it's can you hear it.
-%   Can you here the music?"}
-%
-% % \newpage
-% % \tableofcontents
-% % \newpage
-% \vfill
 
 \section{Introduzione}
 
@@ -436,11 +429,114 @@ Rappresentiamo un board di dimensioni $M \times N$ tramite due interi a 64 bit
 che chiameremo \emph{position} e \emph{mask}. L'idea è quella di associare ogni
 singola cella di una posizione ad un bit della \emph{position} e ad un bit della
 \emph{mask}. Prendiamo la classica tabella di Forza 4 che ha dimensioni $M = 6$ 
-e $N = 7$.
+e $N = 7$ e numeriamo le caselle come mostrato in figura \ref{fig_bitNumbers}.
 
-\begin{center}
-  INSERIRE IMMAGINE
-\end{center}
+\begin{figure}[!ht]
+  \centering
+  \begin{tikzpicture}
+    \tikzstyle{every node}=[font=\LARGE]
+    \draw  (0,0) rectangle ++(12,11.5);
+
+    \draw  (1.15,1.13) circle (0.7cm);
+    \draw  (2.75,1.13) circle (0.7cm);
+    \draw  (4.35,1.13) circle (0.7cm);
+    \draw  (5.95,1.13) circle (0.7cm);
+    \draw  (7.55,1.13) circle (0.7cm);
+    \draw  (9.20,1.13) circle (0.7cm);
+    \draw  (10.8,1.13) circle (0.7cm);
+
+    \draw  (1.15,2.96) circle (0.7cm);
+    \draw  (2.75,2.96) circle (0.7cm);
+    \draw  (4.35,2.96) circle (0.7cm);
+    \draw  (5.95,2.96) circle (0.7cm);
+    \draw  (7.55,2.96) circle (0.7cm);
+    \draw  (9.20,2.96) circle (0.7cm);
+    \draw  (10.8,2.96) circle (0.7cm);
+
+    \draw  (1.15,4.79) circle (0.7cm);
+    \draw  (2.75,4.79) circle (0.7cm);
+    \draw  (4.35,4.79) circle (0.7cm);
+    \draw  (5.95,4.79) circle (0.7cm);
+    \draw  (7.55,4.79) circle (0.7cm);
+    \draw  (9.20,4.79) circle (0.7cm);
+    \draw  (10.8,4.79) circle (0.7cm);
+
+    \draw  (1.15,6.62) circle (0.7cm);
+    \draw  (2.75,6.62) circle (0.7cm);
+    \draw  (4.35,6.62) circle (0.7cm);
+    \draw  (5.95,6.62) circle (0.7cm);
+    \draw  (7.55,6.62) circle (0.7cm);
+    \draw  (9.20,6.62) circle (0.7cm);
+    \draw  (10.8,6.62) circle (0.7cm);
+
+    \draw  (1.15,8.45) circle (0.7cm);
+    \draw  (2.75,8.45) circle (0.7cm);
+    \draw  (4.35,8.45) circle (0.7cm);
+    \draw  (5.95,8.45) circle (0.7cm);
+    \draw  (7.55,8.45) circle (0.7cm);
+    \draw  (9.20,8.45) circle (0.7cm);
+    \draw  (10.8,8.45) circle (0.7cm);
+
+    \draw  (1.15,10.28) circle (0.7cm);
+    \draw  (2.75,10.28) circle (0.7cm);
+    \draw  (4.35,10.28) circle (0.7cm);
+    \draw  (5.95,10.28) circle (0.7cm);
+    \draw  (7.55,10.28) circle (0.7cm);
+    \draw  (9.20,10.28) circle (0.7cm);
+    \draw  (10.8,10.28) circle (0.7cm);
+
+    \node at (1.15,1.13) {$0$};
+    \node at (2.75,1.13) {$7$};
+    \node at (4.35,1.13) {$14$};
+    \node at (5.95,1.13) {$21$};
+    \node at (7.55,1.13) {$28$};
+    \node at (9.20,1.13) {$35$};
+    \node at (10.8,1.13) {$42$};
+
+    \node at (1.15,2.96) {$1$};
+    \node at (2.75,2.96) {$8$};
+    \node at (4.35,2.96) {$15$};
+    \node at (5.95,2.96) {$22$};
+    \node at (7.55,2.96) {$29$};
+    \node at (9.20,2.96) {$36$};
+    \node at (10.8,2.96) {$43$};
+
+    \node at (1.15,4.79) {$2$};
+    \node at (2.75,4.79) {$9$};
+    \node at (4.35,4.79) {$16$};
+    \node at (5.95,4.79) {$23$};
+    \node at (7.55,4.79) {$30$};
+    \node at (9.20,4.79) {$37$};
+    \node at (10.8,4.79) {$44$};
+
+    \node at (1.15,6.62) {$3$};
+    \node at (2.75,6.62) {$10$};
+    \node at (4.35,6.62) {$17$};
+    \node at (5.95,6.62) {$24$};
+    \node at (7.55,6.62) {$31$};
+    \node at (9.20,6.62) {$38$};
+    \node at (10.8,6.62) {$45$};
+
+    \node at (1.15,8.45) {$4$};
+    \node at (2.75,8.45) {$11$};
+    \node at (4.35,8.45) {$18$};
+    \node at (5.95,8.45) {$25$};
+    \node at (7.55,8.45) {$32$};
+    \node at (9.20,8.45) {$39$};
+    \node at (10.8,8.45) {$46$};
+
+    \node at (1.15,10.28){$5$};;
+    \node at (2.75,10.28){$12$};;
+    \node at (4.35,10.28){$19$};;
+    \node at (5.95,10.28){$26$};;
+    \node at (7.55,10.28){$33$};;
+    \node at (9.20,10.28){$40$};;
+    \node at (10.8,10.28){$47$};;
+\end{tikzpicture}
+\caption{Ordine dei bit in una tabella $6 \times 7$}
+  \label{fig_bitNumbers}
+\end{figure}
+
 Ad ogni cella corrisponde il numero del bit indicato. L'intero \emph{position} 
 memorizza la posizione del giocatore che dovrà fare la prossima mossa. In 
 particolare avrà uguale a 1 tutti i bit in cui è presente una sua pedina e a 0
@@ -449,21 +545,78 @@ L'intero \emph{mask} memorizza invece le pedine occupate indipendentemente dal
 giocatore. In particolare se celle sono vuote i bit corrispondenti saranno a 0, 
 mentre se le celle contengono una pedina i bit corrispondenti saranno a 1. 
 Vale quindi che quando tutte le celle sono vuote $position = 0$ e $mask = 0$. Se 
-volessimo rappresentare la seguente posizione:
-\begin{center}
-  INSERIRE IMMAGINE
-\end{center}
-Bit e mask assumerebbero questi valori:\medskip
-\begin{center}
-  INSERIRE BIT
-\end{center}
+volessimo rappresentare la posizione mostrata in figura \ref{fig_exaplePosition},
+la $position$ e la $mask$ assumerebbero i seguenti valori:
+\begin{align*}
+  position &= 0000000\; 0000000\; 0000011\; 0001101\; 0001000\; 0000000\; 0000000\\
+  mask &= 0000000\; 0000001\; 0000011\; 0011111\; 0001111\; 0000000\; 0000000\;
+\end{align*}
+\begin{figure}[!ht]
+  \centering
+  \begin{tikzpicture}
+    \tikzstyle{every node}=[font=\LARGE]
+    \draw  (0,0) rectangle ++(12,11.5);
+
+    \draw  (1.15,1.13) circle (0.7cm);
+    \draw  (2.75,1.13) circle (0.7cm);
+    \draw[fill=red!60!white]  (4.35,1.13) circle (0.7cm);
+    \draw[fill=yellow!70!white]  (5.95,1.13) circle (0.7cm);
+    \draw[fill=yellow!70!white]  (7.55,1.13) circle (0.7cm);
+    \draw[fill=red!60!white]  (9.20,1.13) circle (0.7cm);
+    \draw  (10.8,1.13) circle (0.7cm);
+
+    \draw  (1.15,2.96) circle (0.7cm);
+    \draw  (2.75,2.96) circle (0.7cm);
+    \draw[fill=red!60!white]  (4.35,2.96) circle (0.7cm);
+    \draw[fill=red!60!white]  (5.95,2.96) circle (0.7cm);
+    \draw[fill=yellow!70!white]  (7.55,2.96) circle (0.7cm);
+    \draw  (9.20,2.96) circle (0.7cm);
+    \draw  (10.8,2.96) circle (0.7cm);
+
+    \draw  (1.15,4.79) circle (0.7cm);
+    \draw  (2.75,4.79) circle (0.7cm);
+    \draw[fill=red!60!white] (4.35,4.79) circle (0.7cm);
+    \draw[fill=yellow!70!white]  (5.95,4.79) circle (0.7cm);
+    \draw  (7.55,4.79) circle (0.7cm);
+    \draw  (9.20,4.79) circle (0.7cm);
+    \draw  (10.8,4.79) circle (0.7cm);
+
+    \draw  (1.15,6.62) circle (0.7cm);
+    \draw  (2.75,6.62) circle (0.7cm);
+    \draw[fill=yellow!70!white]  (4.35,6.62) circle (0.7cm);
+    \draw[fill=yellow!70!white]  (5.95,6.62) circle (0.7cm);
+    \draw  (7.55,6.62) circle (0.7cm);
+    \draw  (9.20,6.62) circle (0.7cm);
+    \draw  (10.8,6.62) circle (0.7cm);
+
+    \draw  (1.15,8.45) circle (0.7cm);
+    \draw  (2.75,8.45) circle (0.7cm);
+    \draw  (4.35,8.45) circle (0.7cm);
+    \draw[fill=red!60!white]  (5.95,8.45) circle (0.7cm);
+    \draw  (7.55,8.45) circle (0.7cm);
+    \draw  (9.20,8.45) circle (0.7cm);
+    \draw  (10.8,8.45) circle (0.7cm);
+
+    \draw  (1.15,10.28) circle (0.7cm);
+    \draw  (2.75,10.28) circle (0.7cm);
+    \draw  (4.35,10.28) circle (0.7cm);
+    \draw  (5.95,10.28) circle (0.7cm);
+    \draw  (7.55,10.28) circle (0.7cm);
+    \draw  (9.20,10.28) circle (0.7cm);
+    \draw  (10.8,10.28) circle (0.7cm);
+\end{tikzpicture}
+\caption{Posizione di esempio nel gioco per comprendere il funzionamento dei bit}
+  \label{fig_exaplePosition}
+\end{figure}
 
 Se si vuole ottenere la posizione del giocatore avversario basta eseguire uno
 XOR tra i bit della \emph{position} e i bit della \emph{mask}. La posizione
 dell'avversario come mostrato in figura infatti risulta essere:
-\begin{center}
-  INSERIRE BIT
-\end{center}
+\begin{align*}
+  &0000000\; 0000000\; 0000011\; 0001101\; 0001000\; 0000000\; 0000000 \oplus\\
+  &0000000\; 0000001\; 0000011\; 0011111\; 0001111\; 0000000\; 0000000 = \;\\
+  &0000000\; 0000001\; 0000000\; 0010010\; 0000111\; 0000000\; 0000000\;
+\end{align*}
 Si noti come alcuni numeri sono mancati, come se ci fosse una riga fantasma 
 sopra a quelle visibili. Più avanti verrà spiegato perché è necessario 
 utilizzare una riga in più per la rappresentazione.
@@ -872,7 +1025,49 @@ mossa il procedimento è il medesimo.
   \end{algorithmic}
 \end{algorithm}
 
-\section{Conclusione}
+\section{Costo computazionale}
+Definiamo:
+\begin{itemize}
+  \item $b$ come \emph{fattore di diramazione}, ovvero il numero medio di
+    sottoalberi appartenenti ad ogni nodo.
+  \item $d$ come la profondità a cui viene svolta la ricerca.
+\end{itemize}
+
+Se si analizza il costo computazionale risulta che il metodo principale, ovvero 
+quello adibito alla scelta della mossa, ha complessità  dominata  dal costo di
+\textsc{IterativeDeepening} e \textsc{PVS}. È facile osservare però che il primo 
+ha complessità trascurabile rispetto al secondo in quanto il costo totale viene
+assorbito dall'ultima ricerca a profondità massima eseguita da PVS. 
+
+Il costo della ricerca è compreso tra quello di \textsc{MiniMax} $O(b^d)$, 
+dove tutti i rami vengono analizzati, e quello di \textsc{AlphaBeta} 
+\emph{con ordinamento perfetto} $O(\sqrt{b^d})$, dove soltanto i nodi 
+strettamente necessari vengono visitati.\medskip
+
+Nella valutazione del costo complessivo è necessario anche quantificare 
+il costo dell'euristica, in quanto viene invocata al raggiungimento della 
+profondità richiesta o al raggiungimento di un nodo terminale. Quest'ultima, 
+controllando tutte le diagonali e le righe, ha costo $O(max{Rows, Rows + 
+Columns}) = O(Rows + Columns)$. Si noti che $Rows + Columns$ è una soglia massima
+del numero di diagonali presenti, il numero reale è sicuramente inferiore.\medskip
+
+Giocare una mossa ha costo costante nelle board che utilizzano la rappresentazione 
+tramite bit. Il costo invece per la rappresentazione usata nelle board rimanenti
+è dato dal controllo sull'ultima mossa se ha generato una vittoria. Questi 
+controlli sono proporzionali alla lunghezza della sequenza che porta ad una 
+vittoria.\medskip
+
+Il costo per la generazione delle chiavi di hash relative ad una posizione e 
+l'accesso alla tabella delle trasposizioni è costante.
+
+\section{Fonti consultate}
+La fonte principale per tutti gli algoritmi implementati: 
+\href{chessprogramming.org}{\texttt{chessprogramming.org}}\medskip
+
+Riguaro la rappresentazione tramite bit e la valutazione di una vittoria in 
+tempo costante abbia preso spunto sia da \href{http://blog.gamesolver.org/solving-connect-four/06-bitboard/}{\texttt{blog.gamesolver.org}},
+sia da \href{https://towardsdatascience.com/creating-the-perfect-connect-four-ai-bot-c165115557b0}{\texttt{towardsdatascience.com}}.
+Nonostante ciò si è comunque dovuta fare un lavoro di generalizzazioni in quanto 
+le fonti citate riguardano soltanto la configurazione classica di Forza 4.
 
 \end{document}
-
