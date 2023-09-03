@@ -72,8 +72,6 @@ class L17Small {
   // Move order
   private int[] movesOrdered;
 
-  private int evaluateCalls;
-
   public L17Small() {
   }
 
@@ -125,12 +123,9 @@ class L17Small {
       int move = iterativeDeepening(board.copy());
       board.markColumn(move);
 
-      System.err.println("EvaluateCalls: " + evaluateCalls);
-
       return move;
     } catch (TimeoutException e) {
       board.markColumn(current_best_move);
-      System.err.println("EvaluateCalls: " + evaluateCalls);
       return current_best_move;
     }
   }
@@ -210,7 +205,6 @@ class L17Small {
 
     if (depth <= 0) {
       search_not_finished = true;
-      evaluateCalls++;
       return evaluate(B) * (whoIsPlaying ? -1 : 1);
     }
 
@@ -262,7 +256,6 @@ class L17Small {
 
     if (depth <= 0) {
       search_not_finished = true;
-      evaluateCalls++;
       return evaluate(B) * (whoIsPlaying ? -1 : 1);
     }
 
@@ -511,7 +504,6 @@ class L17Small {
   }
 
   private int evaluate_win(CXBitBoard B) {
-    evaluateCalls++;
     if (B.gameState() == myWin)
       return (B.numOfFreeCells() + 1) / 2 + MAXSCORE;
     else if (B.gameState() == yourWin)
