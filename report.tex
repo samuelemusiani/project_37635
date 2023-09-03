@@ -372,9 +372,36 @@ L'algoritmo è quindi il seguente:
 \end{algorithm}
 
 \subsection{Euristica}
-\begin{center}
-  DA FAREEEEEEEEEEEEEEEEE
-\end{center}
+Non potendo raggiungere immediatamente i nodi terminali dell'albero di gioco è
+necessario poter assegnare un punteggio relativo a una posizione in cui nessuno
+dei due giocatori ha ancora vinto. In particolare il puntggio è 0 se la 
+posizione risulta pari tra i due giocatori, oppure assume un valore positivo se
+il giocatore che sta valutando è in vantaggio, o altrimenti negativo se la 
+posizione è vantaggiosa per l'avversario. Questo permette di selezionare i rami
+più promettenti e distinguerli da quelli perdenti.
+
+L'approccio usato per la funzione di valutazione è quello di considerare 
+le serie aperte di pedine che potrebbero in futuro dare una vittoria. In 
+particolare vengono considerati anche gli spazi vuoti in quanto più spazi danno
+una probabilità maggiore di riuscire a chiudere una determinata sequenza. Si 
+noti però che il peso degli spazi nella valutazione è soltanto un terzo rispetto
+a quello delle pedine effettivamente posizionate.
+
+Vengono eseguiti soltanto controlli orizzontali e diagonali in quanto abbiano 
+notato che i controlli verticali erano pressoché inutili. È infatti immediato 
+per il giocatore avversario bloccare una linea verticale giocando la cella
+immediatamente sopra.
+
+Una proprietà interessante della funzione di valutazione è la linearità. 
+Inizialmente infatti abbiamo tentanto un approccio in cui le sequenze di pedine 
+venivano valutate tramite una funzione quadratica. Dopo svariati test è però 
+stato necessario eliminare qualsiasi elevamento a potenza in quanto portava la 
+valutazione a divergere troppo dal risultato corretto del ramo dell'albero di 
+gioco.
+
+Durante le fasi iniziale è stata anche adottata una valutazione delle mosse che
+privilegiava quelle più vicine al centro. Dopo molti test abbiamo deciso però di
+eliminare questa valutazione in quanto non portava nessun miglioramento.
 
 \section{Bitboard in Small}
 \label{sec_bitboard}
