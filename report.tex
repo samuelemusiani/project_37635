@@ -11,25 +11,25 @@
 \title{\textbf{Hopeless}\\
 \vspace{0.2cm}\normalsize Relazione del progetto per il corso di Algoritmi\\
 \normalsize Università di Bologna}
-
-\author{
-  E. Argonni,
-  S. Musiani
-}
-
 \date{2022 - 2023}
 
 \begin{document}
 
 \maketitle
 
+\begin{flushright}
+  Argonni Emanuele, 0001078626\linebreak
+  Musiani Samuele, 0001069143
+\end{flushright}
+
+
 \section{Introduzione}
 
 Il progetto consisteva nello sviluppare un programma che sapesse giocare nel 
-miglior modo possibile il gioco \emph{Connect X}. Quest'ultimo consiste in una
-generalizzazione del classico gioco Forza 4 resa possibile da delle 
+miglior modo possibile il gioco \emph{Connect X}. Quest'ultimo è una 
+generalizzazione del classico gioco Forza 4 resa possibile grazie a delle 
 configurazioni che si distaccavano dalla classica tabella $6 \times 7$ presente 
-nel gioco originale e che venivano fornite dal docente.
+nel gioco originale;
 
 \section{Il giocatore Small e Big}
 
@@ -39,7 +39,7 @@ necessaria in quanto, come spiegato più avanti nella sezione \ref{sec_bitboard}
 la rappresentazione della tabella di gioco tramite Bitboard è possibile solo 
 fino alla configurazione $7 \times 7$. Dove possibile quindi è stata adottata 
 questa rappresentazione, mentre dove non lo era è stata mantenuta la classica
-CXBoard fornita dal docente. Per questo il nome Small e Big: il gicatore Small 
+CXBoard fornita dal docente. Per questo il nome Small e Big: il giocatore Small 
 può giocare solo le configurazioni più piccole della $7 \times 7$ compresa, 
 mentre il giocatore Big, nonostante possa giocare tutte le configurazioni, si 
 limita a quelle rimanenti.
@@ -66,10 +66,10 @@ esplorare l'intero albero di gioco. Questo porta a dei costi computazionali
 estremamente elevati. Prendiamo per esempio la classica configurazione di Forza 
 4 con 6 righe e 7 colonne. Se volessi calcolare l'intero albero di gioco, e 
 quindi tutte le possibili configurazioni che si possono ottenere, dovremmo 
-considerare $3^{7 \cdot 6} = 3^{42} \approx 1.09 \cdot 10^{20}$. In realtà 
-questo è un limite superiore, in quanto molte di queste configurazioni non 
-sarebbero valide. Nonostante ciò le configurazioni restano comunque troppe per
-essere esplorate tutte in un tempo accettabile. Sono stati quindi inventati 
+considerare $3^{7 \cdot 6} = 3^{42} \approx 1.09 \cdot 10^{20}$ configurazioni. 
+In realtà questo è un limite superiore, in quanto molte di queste configurazioni 
+non sarebbero valide. Nonostante ciò le configurazioni restano comunque troppe 
+per essere esplorate tutte in un tempo accettabile. Sono stati quindi inventati 
 degli ulteriori algoritmi, che si basano comunque su MiniMax, ma che sono molto 
 più efficienti rispetto a quest'ultimo. Il più famoso è AlphaBeta. Non 
 riteniamo necessario spiegare il funzionamento di MiniMax e AlphaBeta, ma bensì 
@@ -99,7 +99,7 @@ principale.
 Nel caso peggiore, ovvero quello in cui ogni variante secondaria risulta essere
 migliore della variante principale considerata in precedenza, l'algoritmo PVS 
 risulta essere più lento del classico AlphaBeta. Questo caso pessimo però è 
-molto raro, sopratutto se si integra PVS un riordinamento delle mosse in modo
+molto raro, sopratutto se si integra PVS un ordinamento delle mosse in modo
 da considerare prima quelle che risulta essere più promettenti.
 
 Di seguito è presentata una versione in pseudo-codice dell'algoritmo PVS:
@@ -192,8 +192,8 @@ metodo base per la gestione del tempo nella scelta di una mossa negli algoritmi
 che sfruttano la ricerca in profondità (Depth-First search, DFS) come PVS. 
 L'idea alla base di questa strategia è quella di effettuare una serie 
 di iterazioni dell'algoritmo di ricerca in profondità, aumentando gradualmente 
-la profondità massima dell'albero esplorato. Ad ogni iterazione, l'algoritmo 
-effettua una ricerca in profondità limitata (Depth-Limited search, DLS) e, alla
+la profondità massima dell'albero esplorato. A ogni iterazione, l'algoritmo 
+effettua una ricerca in profondità limitata (Depth-Limited search) e, alla
 conclusione, memorizza la mossa migliore fino a quel momento trovata. 
 Successivamente ricomincia la ricerca con una profondità maggiore. Questo 
 procedimento continua fino a che il tempo non scade, momento in cui la mossa 
@@ -236,7 +236,7 @@ migliore fino a quel momento viene ritornata.
 valore della posizione ma bensì la mossa migliore nella posizione attuale.
 
 Si noti che nell'algoritmo presentato la profondità viene inizializzata in base 
-al giocatore che inizia la partita. Inoltre l'aumento ad ogni iterazione della 
+al giocatore che inizia la partita. Inoltre l'aumento a ogni iterazione della 
 profondità non è di 1 ma bensì di 2. È necessario fare entrambe queste 
 variazioni all'algoritmo generale descritto sopra per valutare solo le 
 profondità in cui entrambi i giocatori hanno lo stesso numero di pedine in 
@@ -252,7 +252,7 @@ la ricerca PVS, viene ritornata immediatamente la mossa migliore che è salvata
 nella variabile globale $currentBestMove$.
 
 La variabile $previousDepthSearch$ serve per memorizzare la profondità che il
-giocatore ha raggiunto nella precedente chiamata di ID. In questo modo, se nella
+giocatore ha raggiunto nella precedente chiamata a ID. In questo modo, se nella
 precedente chiamata eseguiamo una ricerca a tutte le profondità fino alla numero 
 $n$, nella chiamata successiva puntiamo direttamente alla profondità $n - 2$ in 
 quanto siamo praticamente certi di poterla raggiungere nel tempo dato.
@@ -278,7 +278,7 @@ un hash della configurazione di gioco. L'effettivo metodo di hash però
 differisce per il giocatore Small e il giocatore Big, quindi viene lasciata 
 nelle rispettive sezioni la spiegazione dettagliata del metodo specifico.
 
-Si noti che oltre alla posizione stessa è importante memorizzare la pronfodità
+Si noti che oltre alla posizione stessa è importante memorizzare la profondità
 a cui si è valutata, perché non sempre i valori all'interno della Transposition
 table sono affidabili se la profondità è più bassa di quella richiesta nella
 ricerca.
@@ -298,7 +298,7 @@ La tecnica base per ottenere questo è riordinare le mosse possibili in base
 al punteggio ottenuto nell'iterazione precedente memorizzato nella Transposition
 table. Se infatti l'ordine non è più quello base che considera le mosse da 
 sinistra a destra, ma bensì quello in cui la mossa con il punteggio maggiore è
-la prima, è molto più probabile che PVS trovi la variazione principale nalla 
+la prima, è molto più probabile che PVS trovi la variazione principale nella 
 prima mossa e quindi sia molto efficiente.
 
 Nonostante a livello teorico il riordinamento delle mosse in base alla loro 
@@ -310,8 +310,8 @@ secondo noi è dovuto a vari aspetti pratici:
   \item L'operazione di sorting fatta sulle mosse non è troppo dispendiosa 
     se la si considera singolarmente. Se però la si contestualizza 
     nell'algoritmo totale si scopre che in realtà viene eseguita tantissime 
-    volte. Questo porta ad un rallentamento generale dell'algoritmo che non 
-    riesce più ad esplorare in profondità come rispetto alla versione senza 
+    volte. Questo porta a un rallentamento generale dell'algoritmo che non 
+    riesce più a esplorare in profondità come rispetto alla versione senza 
     questo tipo di ordinamento delle mosse.
 
   \item Per ordinare le mosse è necessario prima leggere i loro valori dalla 
@@ -326,7 +326,8 @@ secondo noi è dovuto a vari aspetti pratici:
     peggioramento} però è necessario eseguire ogni mossa singolarmente per 
     ottenerlo e poi annullarla. Questo porta a eseguire e ad annullare ogni 
     mossa almeno due volte: la prima quando si ordinano le mosse disponibili e 
-    la seconda quando una board. 
+    la seconda quando la si esegue per valutare un particolare ramo dell'albero
+    di gioco. 
 
   \item Infine la nostra euristica non è sicuramente accurata abbastanza da 
     assegnare in modo sistematico il valore migliore alla linea principale di 
@@ -367,7 +368,7 @@ L'algoritmo è quindi il seguente:
 \subsection{Euristica}
 Non potendo raggiungere immediatamente i nodi terminali dell'albero di gioco è
 necessario poter assegnare un punteggio relativo a una posizione in cui nessuno
-dei due giocatori ha ancora vinto. In particolare il puntggio è 0 se la 
+dei due giocatori ha ancora vinto. In particolare il punteggio è 0 se la 
 posizione risulta pari tra i due giocatori, oppure assume un valore positivo se
 il giocatore che sta valutando è in vantaggio, o altrimenti negativo se la 
 posizione è vantaggiosa per l'avversario. Questo permette di selezionare i rami
@@ -401,7 +402,7 @@ eliminare questa valutazione in quanto non portava nessun miglioramento.
 La vera differenza tra il gicatore Big e il giocatore Small e il modo in cui
 viene rappresentata una configurazione di gioco. Il metodo sicuramente più
 intuitivo per rappresentare una posizione di Forza 4 è quello di impegare una 
-matrice in cui ogni cella è direttamente associata ad una cesella della 
+matrice in cui ogni cella è direttamente associata a una cesella della 
 posizione e i valori della matrice indicano se una determinata cella è vuota, 
 è presente una pedina del primo giocatore o è presente una pedina del secondo 
 giocatore.
@@ -413,7 +414,7 @@ sorge quando si deve valutare se un determinato giocatore ha vinto. Per vincere
 in Connect X bisogna allineare esattamente \emph{X} pedine in verticale, 
 orizzontale o diagonale. Quindi il controllo consiste nel guardare tutte le 
 colonne, tutte le righe e infine tutte le diagonali per scoprire se un giocatore
-è riuscito ad allineare \emph{X} pedine. Questo controllo fa eseguito ogni volta
+è riuscito ad allineare \emph{X} pedine. Questo controllo va eseguito ogni volta
 che un giocatore esegue una mossa, risultando quindi estremamente dispendioso.
 Nella classe CXBoard è però presente un'ottimizzazione: essendo il controllo 
 eseguito per ogni singola mossa giocata, non è necessario controllare tutte le
@@ -537,12 +538,12 @@ e $N = 7$ e numeriamo le caselle come mostrato in figura \ref{fig_bitNumbers}.
   \label{fig_bitNumbers}
 \end{figure}
 
-Ad ogni cella corrisponde il numero del bit indicato. L'intero \emph{position} 
+A ogni cella corrisponde il numero del bit indicato. L'intero \emph{position} 
 memorizza la posizione del giocatore che dovrà fare la prossima mossa. In 
 particolare avrà uguale a 1 tutti i bit in cui è presente una sua pedina e a 0
 tutti quelli in cui vi è una pedina dell'avversario o non vi è nessuna pedina. 
 L'intero \emph{mask} memorizza invece le pedine occupate indipendentemente dal
-giocatore. In particolare se celle sono vuote i bit corrispondenti saranno a 0, 
+giocatore. In particolare se le celle sono vuote i bit corrispondenti saranno a 0, 
 mentre se le celle contengono una pedina i bit corrispondenti saranno a 1. 
 Vale quindi che quando tutte le celle sono vuote $position = 0$ e $mask = 0$. Se 
 volessimo rappresentare la posizione mostrata in figura \ref{fig_exaplePosition},
@@ -672,18 +673,15 @@ deve muovere al prossimo turno. Avviene quindi nella seconda riga la
 memorizzazione della mossa. Essendo ora la variabile $position$ modificata per
 indicare la posizione dell'avversario, è soltanto necessario inserire la mossa
 fatta nella $mask$, in quanto è l'unica a memorizzare le posizione di entrambi i 
-giocatori. Per fare ciò si sposa un singolo bit fino alla cella base della 
+giocatori. Per fare ciò si sposta un singolo bit fino alla cella base della 
 colonna giocata: $1 \ll (col * (Rows + 1)))$, e successivamente lo si somma con
 la maschera: $mask + (1 \ll (col * (Rows + 1))))$. In questo modo, essendo i
-bit ordiati in senso crescente rispetto alle righe, il bit sommato alla base 
-della collona viene "propagato" fino alla prima cella libera di tale colonne, 
+bit ordinati in senso crescente rispetto alle righe, il bit sommato alla base 
+della colonna viene "propagato" fino alla prima cella libera di tale colonna, 
 dove quindi il giocatore avrà fatto la sua mossa. Durante la "propagazione" del
 bit però, alcune celle potrebbero diventare nulle in quanto in binario $1 + 1 = 
 10$. È quindi necessario sovrascrivere quelle celle eseguendo un OR tra la 
-$mask$ originale e quella derivata dalla somma con il bit. Facciamo un esempio:
-\begin{center}
-  INSERIRE BIT ESEMPIO
-\end{center}
+$mask$ originale e quella derivata dalla somma con il bit.
 
 Quando invece si vuole annullare l'ultima mossa giocata vengono eseguite operazioni
 estremamente simili, solo nell'ordine inverso. In particolare le due operazioni
@@ -716,7 +714,7 @@ trovato 4 pedine consecutive e uno dei due giocatori avrebbe vinto. Per
 controllare quindi una vittoria, prima si controllano le coppie e 
 successivamente si controlla se queste ultime sono allineate.
 
-Prendiamo ora una board $5 \time 5$ in cui in una colonna sono presenti 4 pedine
+Prendiamo ora una board $5 \times 5$ in cui in una colonna sono presenti 4 pedine
 di uno stesso giocatore, mentre in una ulteriore colonna sono presenti solo 3
 pedine del giocatore avversario. La rappresentazione tramite bit risulterebbe 
 quindi come segue:
@@ -724,8 +722,8 @@ quindi come segue:
   position &= 000000\; 001111\; 000000\; 000000\; 000000\\
   mask &= 000000\; 001111\; 000000\; 000111\; 000000\;
 \end{align*}
-Inannzitutto controlliamo se esistono delle coppie: per fare ciò basta eseguire
-un AND tra la $position$ e la $position$ shiftata di un bit a sinistra. Applicato
+Innanzitutto controlliamo se esistono delle coppie: per fare ciò basta eseguire
+un AND tra la $position$ e la $position$ spostata di un bit a sinistra. Applicato
 all'esempio di prima l'operazione risulta:
 \begin{align*}
   pairs = &position \land (position \ll 1) =\\
@@ -850,7 +848,7 @@ che 4 pedine siano allineate:
   &000001\; 111000\; 000000\; 000000\; 000000 = \\
   &000000\; 011000\; 000000\; 000000\; 000000\\
 \end{align*}
-Nell'ultima variabile vedia 2 bit a 1. Questo significa che sono stati trovati
+Nell'ultima variabile vediamo 2 bit a 1. Questo significa che sono stati trovati
 due gruppi da 4 pedine consecutive: $(0-1-2-3-4)$ e $(1-2-3-4-5)$. È però 
 necessario aggiungere un'ulteriore operazione per verificare se 5 pedine sono
 consecutive, o meglio se esiste un'ulteriore pedina attaccata a un gruppo da 4:
@@ -1019,7 +1017,7 @@ mossa il procedimento è il medesimo.
       \If{player one had played last}
         \State $position = position \oplus table[row][col]$
       \Else
-        \State $position = position \oplus table[Rows + row][Columnes + col]$
+        \State $position = position \oplus table[Rows + row][Columns + col]$
       \EndIf
     \EndFunction
   \end{algorithmic}
@@ -1029,7 +1027,7 @@ mossa il procedimento è il medesimo.
 Definiamo:
 \begin{itemize}
   \item $b$ come \emph{fattore di diramazione}, ovvero il numero medio di
-    sottoalberi appartenenti ad ogni nodo.
+    sottoalberi appartenenti a ogni nodo.
   \item $d$ come la profondità a cui viene svolta la ricerca.
 \end{itemize}
 
@@ -1047,24 +1045,26 @@ strettamente necessari vengono visitati.\medskip
 Nella valutazione del costo complessivo è necessario anche quantificare 
 il costo dell'euristica, in quanto viene invocata al raggiungimento della 
 profondità richiesta o al raggiungimento di un nodo terminale. Quest'ultima, 
-controllando tutte le diagonali e le righe, ha costo $O(max{Rows, Rows + 
-Columns}) = O(Rows + Columns)$. Si noti che $Rows + Columns$ è una soglia massima
-del numero di diagonali presenti, il numero reale è sicuramente inferiore.\medskip
+controllando tutte le diagonali e le righe, ha costo $O(\textrm{max}\{Rows \cdot 
+Columns, (Rows + Columns) \cdot \sqrt{Columns^2 + Rows^2}\}) = O((Rows + Columns) 
+\cdot \sqrt{Columns^2 + Rows^2})$. Si noti che $Rows + Columns$ è una soglia 
+massima del numero di diagonali presenti, il numero reale è inferiore. Inoltre 
+$\sqrt{Columns^2 + Rows^2}$ è la lunghezza della diagonale massima.\medskip
 
 Giocare una mossa ha costo costante nelle board che utilizzano la rappresentazione 
 tramite bit. Il costo invece per la rappresentazione usata nelle board rimanenti
 è dato dal controllo sull'ultima mossa se ha generato una vittoria. Questi 
-controlli sono proporzionali alla lunghezza della sequenza che porta ad una 
+controlli sono proporzionali alla lunghezza della sequenza che porta a una 
 vittoria.\medskip
 
-Il costo per la generazione delle chiavi di hash relative ad una posizione e 
+Il costo per la generazione delle chiavi di hash relative a una posizione e 
 l'accesso alla tabella delle trasposizioni è costante.
 
 \section{Fonti consultate}
 La fonte principale per tutti gli algoritmi implementati: 
 \href{chessprogramming.org}{\texttt{chessprogramming.org}}\medskip
 
-Riguaro la rappresentazione tramite bit e la valutazione di una vittoria in 
+Riguardo la rappresentazione tramite bit e la valutazione di una vittoria in 
 tempo costante abbia preso spunto sia da \href{http://blog.gamesolver.org/solving-connect-four/06-bitboard/}{\texttt{blog.gamesolver.org}},
 sia da \href{https://towardsdatascience.com/creating-the-perfect-connect-four-ai-bot-c165115557b0}{\texttt{towardsdatascience.com}}.
 Nonostante ciò si è comunque dovuta fare un lavoro di generalizzazioni in quanto 
