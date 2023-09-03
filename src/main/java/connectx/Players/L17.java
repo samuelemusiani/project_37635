@@ -661,27 +661,15 @@ class L17Big {
   long current_position;
 
   // Heuristic
-  private int evaPositionalMatrix[][];
   private boolean am_i_fist;
-  float POWBASE;
-
-  // Incremental
-  private int evalScore;
-  private int[] rowScore;
-  private int[] columnsScore;
-  private int[] diagonalAScore;
-  private int[] diagonalBScore;
-
-  private int oldEvalScore;
-  private int[] oldRowScore;
-  private int[] oldColumnsScore;
-  private int[] oldDiagonalAScore;
-  private int[] oldDiagonalBScore;
 
   // Iterative deepening
   private int current_best_move;
   private boolean search_not_finished;
   private int previous_search_depth;
+
+  // Move order
+  private int[] movesOrdered;
 
   // Tmp
   private int fullSearches;
@@ -709,23 +697,6 @@ class L17Big {
     am_i_fist = first;
     previous_search_depth = 1;
 
-    switch (Rows) {
-      case 20:
-        this.POWBASE = 1.5f;
-
-      case 30:
-        this.POWBASE = 1.4f;
-
-      case 40:
-        this.POWBASE = 1.3f;
-
-      case 50:
-        this.POWBASE = 1.2f;
-
-      default: // This should not appen
-        this.POWBASE = 1.2f;
-    }
-
     // Zobrist
     Random rand = new Random(System.currentTimeMillis());
 
@@ -745,91 +716,25 @@ class L17Big {
       static_column_fullnes[i] = 0;
     }
 
-    evaPositionalMatrix = new int[Rows][Columns];
+    // Moves reoring
+    movesOrdered = new int[Columns];
+    int[] m = new int[Columns];
+    for (int i = 0; i < Columns; i++)
+      m[i] = i;
 
-    // In this way we can balance the points if black put a men on top of white
-    // Basically we don't value height but "centerness"
-    for (int i = Columns / 2; i < Columns; i++) {
-      for (int j = 0; j < Rows * 3 / 4; j++) {
-        evaPositionalMatrix[j][i] = Columns - i;
-      }
-    }
-
-    // Copy the values to the other side of the board
-    for (int i = 0; i < Rows; i++) {
-      for (int j = 0; j < Columns / 2; j++) {
-        evaPositionalMatrix[i][j] = evaPositionalMatrix[i][Columns - j - 1];
-      }
-    }
-
-    // The center column is very important
-    for (int j = 0; j < Rows * 3 / 4; j++) {
-      evaPositionalMatrix[j][Columns / 2] += Columns / 2;
-      if (Columns % 2 == 0)
-        evaPositionalMatrix[j][Columns / 2 - 1] += Columns / 2;
-    }
-
-    // for (int i = Rows - 1; i >= 0; i--) {
-    // System.err.println(Arrays.toString(evaPositionalMatrix[i]));
-    // }
-
-    // Incremental evaluation
-    evalScore = 0;
-    rowScore = new int[Rows];
-    columnsScore = new int[Columns];
-    diagonalAScore = new int[Rows + Columns]; // Upper bound
-    diagonalBScore = new int[Rows + Columns]; // Upper bound
-
-    oldEvalScore = 0;
-    oldRowScore = new int[Rows];
-    oldColumnsScore = new int[Columns];
-    oldDiagonalAScore = new int[Rows + Columns]; // Upper bound
-    oldDiagonalBScore = new int[Rows + Columns]; // Upper bound
-
-    for (int i = 0; i < Rows; i++) {
-      rowScore[i] = 0;
-      oldRowScore[i] = 0;
-    }
-
+    int delta = 0;
     for (int i = 0; i < Columns; i++) {
-      columnsScore[i] = 0;
-      oldColumnsScore[i] = 0;
-    }
+      if (i % 2 == 1)
+        delta++;
 
-    for (int i = 0; i < Columns + Rows; i++) {
-      diagonalAScore[i] = 0;
-      diagonalBScore[i] = 0;
-      oldDiagonalAScore[i] = 0;
-      oldDiagonalBScore[i] = 0;
+      movesOrdered[i] = m[Columns / 2 + (i % 2 == 0 ? 1 : -1) * delta];
     }
   }
 
   public int selectColumn(CXBoard B) {
     START = System.currentTimeMillis();
 
-    if (B.numOfMarkedCells() > 0) {
-      CXCell c = B.getLastMove();
-      // I don't need to check if i can win
-      oldEvalScore = decrementalEvaluate(B, c.i, c.j, this.oldEvalScore,
-          this.oldRowScore, this.oldColumnsScore, this.oldDiagonalAScore,
-          this.oldDiagonalBScore);
-    }
-
-    evalScore = oldEvalScore;
-
-    for (int i = 0; i < Rows; i++)
-      rowScore[i] = oldRowScore[i];
-
-    for (int i = 0; i < Columns; i++)
-      columnsScore[i] = oldColumnsScore[i];
-
-    for (int i = 0; i < Columns + Rows; i++) {
-      diagonalAScore[i] = oldDiagonalAScore[i];
-      diagonalBScore[i] = oldDiagonalBScore[i];
-    }
-
-    Integer[] L = reorderMoves(B);
-    current_best_move = L[0];
+    current_best_move = 0;
 
     if (table.size() > 2_000_000) // Avoid heap errors
       table.clear();
@@ -845,16 +750,12 @@ class L17Big {
         static_column_fullnes[c]++;
       }
 
+      // Do I really need a copy?
       int move = iterativeDeepening(B.copy(), current_position);
 
       column_fullnes[current_best_move] = static_column_fullnes[current_best_move];
       current_position = zobristMakeMove(current_position, move, false);
       static_column_fullnes[move]++;
-
-      CXCell c = B.getLastMove();
-      oldEvalScore = decrementalEvaluate(B, c.i, c.j, this.oldEvalScore,
-          this.oldRowScore, this.oldColumnsScore, this.oldDiagonalAScore,
-          this.oldDiagonalBScore);
 
       return move;
     } catch (TimeoutException e) {
@@ -862,13 +763,6 @@ class L17Big {
       current_position = zobristMakeMove(current_position, current_best_move,
           false);
       static_column_fullnes[current_best_move]++;
-
-      if (B.numOfMarkedCells() > 0) {
-        CXCell c = B.getLastMove();
-        oldEvalScore = decrementalEvaluate(B, c.i, c.j, this.oldEvalScore,
-            this.oldRowScore, this.oldColumnsScore, this.oldDiagonalAScore,
-            this.oldDiagonalBScore);
-      }
 
       return current_best_move;
     }
@@ -910,21 +804,15 @@ class L17Big {
     int alpha = -(B.numOfFreeCells() / 2) - MAXSCORE;
     int beta = (B.numOfFreeCells() + 1) / 2 + MAXSCORE;
     boolean bSearchPv = true;
-    Integer[] possible_moves = reorderMoves(B);
-    int move = possible_moves[0];
 
-    for (int i : possible_moves) {
+    int move = 0;
+
+    for (int i : this.movesOrdered) {
+      if (B.fullColumn(i))
+        continue;
+
       B.markColumn(i);
       position = zobristMakeMove(position, i, false);
-
-      // Incremental Evaluation
-      CXCell c = B.getLastMove();
-      int preEvalScore = evalScore;
-      int preRowScore = rowScore[c.i];
-      int preColumnScore = columnsScore[c.j];
-      int preDiagonalAScore = diagonalAScore[c.i + c.j];
-      int preDiagonalBScore = diagonalBScore[c.i + c.j];
-      incrementalEvaluate(B);
 
       Integer score = table.get(position);
       Integer score_depth = table_depth.get(position);
@@ -949,13 +837,6 @@ class L17Big {
       B.unmarkColumn();
       position = zobristUnmakeMove(position, i, false);
 
-      // Reset incremental eval
-      evalScore = preEvalScore;
-      rowScore[c.i] = preRowScore;
-      columnsScore[c.j] = preColumnScore;
-      diagonalAScore[c.i + c.j] = preDiagonalAScore;
-      diagonalBScore[c.i + c.j] = preDiagonalBScore;
-
       if (score > alpha) {
         alpha = score;
         move = i;
@@ -978,20 +859,13 @@ class L17Big {
     }
 
     boolean bSearchPv = true;
-    Integer[] possible_moves = reorderMoves(B);
 
-    for (int i : possible_moves) {
+    for (int i : this.movesOrdered) {
+      if (B.fullColumn(i))
+        continue;
+
       B.markColumn(i);
       position = zobristMakeMove(position, i, whoIsPlaying);
-
-      // Incremental Evaluation
-      CXCell c = B.getLastMove();
-      int preEvalScore = evalScore;
-      int preRowScore = rowScore[c.i];
-      int preColumnScore = columnsScore[c.j];
-      int preDiagonalAScore = diagonalAScore[c.i + c.j];
-      int preDiagonalBScore = diagonalBScore[c.i + c.j];
-      incrementalEvaluate(B);
 
       Integer score = table.get(position);
       Integer score_depth = table_depth.get(position);
@@ -1016,13 +890,6 @@ class L17Big {
 
       B.unmarkColumn();
       position = zobristUnmakeMove(position, i, whoIsPlaying);
-
-      // Reset incremental eval
-      evalScore = preEvalScore;
-      rowScore[c.i] = preRowScore;
-      columnsScore[c.j] = preColumnScore;
-      diagonalAScore[c.i + c.j] = preDiagonalAScore;
-      diagonalBScore[c.i + c.j] = preDiagonalBScore;
 
       if (score >= beta)
         return beta;
@@ -1051,24 +918,18 @@ class L17Big {
     Integer[] possible_moves = B.getAvailableColumns();
     for (int i : possible_moves) {
       B.markColumn(i);
-      // Incremental Evaluation
-      CXCell c = B.getLastMove();
-      int preEvalScore = evalScore;
-      int preRowScore = rowScore[c.i];
-      int preColumnScore = columnsScore[c.j];
-      int preDiagonalAScore = diagonalAScore[c.i + c.j];
-      int preDiagonalBScore = diagonalBScore[c.i + c.j];
-      incrementalEvaluate(B);
 
-      int score = -fastSearch(B, 1 - beta, depth - 1, !whoIsPlaying, position);
+      position = zobristMakeMove(position, i, whoIsPlaying);
+
+      Integer score = table.get(position);
+      Integer score_depth = table_depth.get(position);
+
+      if (score == null || score_depth < depth) {
+        score = -fastSearch(B, 1 - beta, depth - 1, !whoIsPlaying, position);
+      }
+      position = zobristUnmakeMove(position, i, whoIsPlaying);
 
       B.unmarkColumn();
-      // Reset incremental eval
-      evalScore = preEvalScore;
-      rowScore[c.i] = preRowScore;
-      columnsScore[c.j] = preColumnScore;
-      diagonalAScore[c.i + c.j] = preDiagonalAScore;
-      diagonalBScore[c.i + c.j] = preDiagonalBScore;
 
       if (score >= beta)
         return beta;
@@ -1076,40 +937,18 @@ class L17Big {
     return beta - 1;
   }
 
-  private int incrementalEvaluate(CXBoard B) {
-    CXCell lastMove = B.getLastMove();
-    int lastMoveRow = lastMove.i;
-    int lastMoveColumn = lastMove.j;
-
-    this.evalScore = decrementalEvaluate(B, lastMoveRow, lastMoveColumn,
-        this.evalScore, this.rowScore, this.columnsScore, this.diagonalAScore,
-        this.diagonalBScore);
-    return this.evalScore;
-  }
-
-  private int decrementalEvaluate(CXBoard B, int lastMoveRow,
-      int lastMoveColumn, int evalScore, int[] rowScore, int[] columnsScore,
-      int[] diagonalAScore, int[] diagonalBScore) {
-
-    int sum = evalScore * evalScore * (evalScore < 0 ? -1 : 1);
-    sum -= rowScore[lastMoveRow];
-    sum -= columnsScore[lastMoveColumn];
-    sum -= diagonalAScore[lastMoveColumn + lastMoveRow];
-    sum -= diagonalBScore[lastMoveColumn + lastMoveRow];
-
-    // System.err.println("rowScore: " + rowScore[lastMoveRow]);
-    // System.err.println("columnsScore: " + columnsScore[lastMoveColumn]);
-
+  private int evaluate(CXBoard B) {
     double VERTICAL_WEIGHT = 0.5;
     double HORIZONTAL_WEIGHT = 1;
     double DIAGONAL_WEIGHT = 1;
 
     int MANSPACERATIO = 3;
 
+    int sum = 0;
     int tmpSum = 0;
 
     // Horizontal
-    {
+    for (int i = 0; i < B.M; i++) {
       int countMen1 = 0;
       int countMen2 = 0;
       int countSpaces1 = 0;
@@ -1117,7 +956,7 @@ class L17Big {
 
       for (int j = 0; j < B.N; j++) {
 
-        CXCellState cellState = B.cellState(lastMoveRow, j);
+        CXCellState cellState = B.cellState(i, j);
 
         // Player 1 checks
         switch (cellState) {
@@ -1127,8 +966,7 @@ class L17Big {
 
           case P2:
             if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
-              tmpSum += Math.pow(POWBASE, (countSpaces1 + countMen1 * MANSPACERATIO)) *
-                  (am_i_fist ? 1 : -1);
+              tmpSum += (countSpaces1 + countMen1 * MANSPACERATIO);
             }
             countMen1 = 0;
             countSpaces1 = 0;
@@ -1139,7 +977,7 @@ class L17Big {
             // if (lastMoveRow != 0 && B.cellState(lastMoveRow - 1, j) != 0) {
             // countSpaces1++;
             // }
-
+            //
             if (j % 2 == 0)
               countSpaces1++;
             else
@@ -1151,8 +989,7 @@ class L17Big {
         switch (cellState) {
           case P1:
             if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
-              tmpSum += Math.pow(POWBASE, (countSpaces2 + countMen2 * MANSPACERATIO)) *
-                  (!am_i_fist ? 1 : -1);
+              tmpSum += -(countSpaces2 + countMen2 * MANSPACERATIO);
             }
             countMen2 = 0;
             countSpaces2 = 0;
@@ -1178,20 +1015,17 @@ class L17Big {
 
       // if we didn't hit the opponent men we need to evaluate
       if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
-        tmpSum += Math.pow(POWBASE, (countSpaces1 + countMen1 * MANSPACERATIO)) *
-            (am_i_fist ? 1 : -1);
+        tmpSum += (countSpaces1 + countMen1 * MANSPACERATIO);
       }
       if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
-        tmpSum += Math.pow(POWBASE, (countSpaces2 + countMen2 * MANSPACERATIO)) *
-            (!am_i_fist ? 1 : -1);
+        tmpSum += -(countSpaces2 + countMen2 * MANSPACERATIO);
       }
     }
     sum += tmpSum * HORIZONTAL_WEIGHT;
-    rowScore[lastMoveRow] = (int) (tmpSum * HORIZONTAL_WEIGHT);
     tmpSum = 0;
 
     // Vertical
-    {
+    for (int i = 0; i < B.N; i++) {
       int countMen1 = 0;
       int countMen2 = 0;
       int countSpaces1 = 0;
@@ -1199,7 +1033,7 @@ class L17Big {
 
       for (int j = 0; j < B.M; j++) {
 
-        CXCellState cellState = B.cellState(j, lastMoveColumn);
+        CXCellState cellState = B.cellState(j, i);
 
         // Player 1 checks
         switch (cellState) {
@@ -1234,31 +1068,28 @@ class L17Big {
         }
       }
       if (countMen1 + countSpaces1 >= B.X) {
-        tmpSum += Math.pow(POWBASE, (countSpaces1 + countMen1)) *
-            (am_i_fist ? 1 : -1);
+        tmpSum += (countSpaces1 + countMen1);
       }
 
       if (countMen2 + countSpaces2 >= B.X) {
-        tmpSum += Math.pow(POWBASE, (countSpaces2 + countMen2)) *
-            (!am_i_fist ? 1 : -1);
+        tmpSum += -(countSpaces2 + countMen2);
       }
     }
     sum += tmpSum * VERTICAL_WEIGHT;
-    columnsScore[lastMoveColumn] = (int) (tmpSum * VERTICAL_WEIGHT);
     tmpSum = 0;
 
     // Diagonal check
 
-    // Diagonal \
-    diagonal1: {
-      int slice = lastMoveRow + lastMoveColumn;
+    // https://stackoverflow.com/a/33365042
 
+    // Diagonal \
+    for (int slice = 0; slice < B.M + B.N - 1; ++slice) {
       int z2 = slice < B.M ? 0 : slice - B.M + 1;
       int z1 = slice < B.N ? 0 : slice - B.N + 1;
 
       // Avoid checking small diagonals
       if (slice - z2 - z1 + 1 < B.X)
-        break diagonal1;
+        continue;
 
       // printf("Slice %d (l: /* % */d): ", slice, slice - z2 - z1 + 1);
 
@@ -1277,8 +1108,7 @@ class L17Big {
 
           case P2:
             if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
-              tmpSum += Math.pow(POWBASE, (countSpaces1 + countMen1 * MANSPACERATIO)) *
-                  (am_i_fist ? 1 : -1);
+              tmpSum += (countSpaces1 + countMen1 * MANSPACERATIO);
             }
             countMen1 = 0;
             countSpaces1 = 0;
@@ -1300,8 +1130,7 @@ class L17Big {
         switch (cellState) {
           case P1:
             if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
-              tmpSum += Math.pow(POWBASE, (countSpaces2 + countMen2 * MANSPACERATIO)) *
-                  (!am_i_fist ? 1 : -1);
+              tmpSum += -(countSpaces2 + countMen2 * MANSPACERATIO);
             }
             countMen2 = 0;
             countSpaces2 = 0;
@@ -1325,26 +1154,22 @@ class L17Big {
       }
       // if we didn't hit the opponent men we need to evaluate
       if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
-        tmpSum += Math.pow(POWBASE, (countSpaces1 + countMen1 * MANSPACERATIO)) *
-            (am_i_fist ? 1 : -1);
+        tmpSum += (countSpaces1 + countMen1 * MANSPACERATIO);
       }
       if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
-        tmpSum += Math.pow(POWBASE, (countSpaces2 + countMen2 * MANSPACERATIO)) *
-            (!am_i_fist ? 1 : -1);
+        tmpSum += -(countSpaces2 + countMen2 * MANSPACERATIO);
       }
     }
     sum += tmpSum * DIAGONAL_WEIGHT;
-    diagonalAScore[lastMoveRow + lastMoveColumn] = (int) (tmpSum * VERTICAL_WEIGHT);
     tmpSum = 0;
 
     // Diagonal /
-    diagonal2: {
-      int slice = lastMoveColumn + lastMoveRow;
+    for (int slice = 0; slice < B.N + B.M - 1; ++slice) {
       int z1 = slice < B.N ? 0 : slice - B.N + 1;
       int z2 = slice < B.M ? 0 : slice - B.M + 1;
 
       if (slice - z2 - z1 + 1 < B.X)
-        break diagonal2;
+        continue;
 
       int countMen1 = 0;
       int countMen2 = 0;
@@ -1363,8 +1188,7 @@ class L17Big {
 
           case P2:
             if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
-              tmpSum += Math.pow(POWBASE, (countSpaces1 + countMen1 * MANSPACERATIO)) *
-                  (am_i_fist ? 1 : -1);
+              tmpSum += (countSpaces1 + countMen1 * MANSPACERATIO);
             }
             countMen1 = 0;
             countSpaces1 = 0;
@@ -1387,8 +1211,7 @@ class L17Big {
         switch (cellState) {
           case P1:
             if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
-              tmpSum += Math.pow(POWBASE, (countSpaces2 + countMen2 * MANSPACERATIO)) *
-                  (!am_i_fist ? 1 : -1);
+              tmpSum += -(countSpaces2 + countMen2 * MANSPACERATIO);
             }
             countMen2 = 0;
             countSpaces2 = 0;
@@ -1412,43 +1235,20 @@ class L17Big {
       }
       // if we didn't hit the opponent men we need to evaluate
       if (countMen1 >= 2 && countMen1 + countSpaces1 >= B.X) {
-        tmpSum += Math.pow(POWBASE, (countSpaces1 + countMen1 * MANSPACERATIO)) *
-            (am_i_fist ? 1 : -1);
+        tmpSum += (countSpaces1 + countMen1 * MANSPACERATIO);
       }
       if (countMen2 >= 2 && countMen2 + countSpaces2 >= B.X) {
-        tmpSum += Math.pow(POWBASE, (countSpaces2 + countMen2 * MANSPACERATIO)) *
-            (!am_i_fist ? 1 : -1);
+        tmpSum += -(countSpaces2 + countMen2 * MANSPACERATIO);
       }
     }
 
     sum += tmpSum * DIAGONAL_WEIGHT;
-    diagonalBScore[lastMoveRow + lastMoveColumn] = (int) (tmpSum * VERTICAL_WEIGHT);
     tmpSum = 0;
 
-    sum = (int) Math.sqrt(Math.abs(sum)) * (sum < 0 ? -1 : 1);
+    if (!am_i_fist)
+      sum = -sum;
 
-    evalScore = sum;
-    return evalScore;
-  }
-
-  private int evaluate(CXBoard B) {
-
-    // Check if the next move can make a player win
-    if (B.numOfMarkedCells() > B.X * 2) {
-      Integer[] cols = B.getAvailableColumns();
-      for (int i : cols) {
-        B.markColumn(i);
-        if (B.gameState() != CXGameState.OPEN) { // Someone won
-          int val = evaluate_win(B);
-          B.unmarkColumn(); // To avoid messing the board in the caller
-          return val;
-        }
-        B.unmarkColumn();
-      }
-      // No player can win in the next move
-    }
-
-    return evalScore;
+    return sum;
   }
 
   private int evaluate_win(CXBoard B) {
@@ -1459,29 +1259,6 @@ class L17Big {
       return -(B.numOfFreeCells() / 2) - MAXSCORE;
     else
       return 0;
-  }
-
-  private Integer[] reorderMoves(CXBoard B) {
-    Integer[] r = B.getAvailableColumns();
-
-    // int delta = 0;
-    //
-    // for (int i = 0; i < l; i++) {
-    // if (i % 2 == 1)
-    // delta++;
-    //
-    // r[i] = m[l / 2 + (i % 2 == 0 ? 1 : -1) * delta];
-    // }
-
-    int tmp;
-    tmp = r[0];
-    r[0] = r[B.N / 2];
-    r[B.N / 2] = tmp;
-
-    tmp = r[1];
-    r[1] = r[B.N / 2 + 1];
-    r[B.N / 2 + 1] = tmp;
-    return r;
   }
 
   private long zobristMakeMove(long pos, int i, boolean whoHasPlayed) {
