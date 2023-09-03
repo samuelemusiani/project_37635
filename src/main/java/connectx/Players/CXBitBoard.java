@@ -20,7 +20,6 @@ public class CXBitBoard {
   // grid for the board
   private long position;
   private long mask;
-  private long bottom;
 
   protected Stack<Integer> MC; // Marked Cells stack (used to undo)
   protected int RP[]; // First free row position
@@ -62,11 +61,6 @@ public class CXBitBoard {
   private void initBoard() {
     position = 0;
     mask = 0;
-
-    for (int i = 0; i < Columns; i++) {
-      bottom = bottom << (Rows + 1);
-      bottom |= 1;
-    }
   }
 
   // Resets the marked cells list and other data structures
@@ -138,25 +132,15 @@ public class CXBitBoard {
   // 0 draw,
   // -1 win payer 1
   // 2 OPEN
-  public int markColumn(int col) {
-    // System.err.println("Mark");
+  public void markColumn(int col) {
     RP[col]++;
     if (RP[col] == Rows)
       AC.remove(col);
 
-    long new_position = position ^ mask;
-    // System.err.println("Col: " + col * (Rows + 1));
-    // System.err.println("1 << : " + (long) (1l << 48));
-    long new_mask = mask | (mask + (1l << (col * (Rows + 1))));
+    position = position ^ mask;
+    long tmp_mask = mask | (mask + (1l << (col * (Rows + 1))));
+    mask = tmp_mask;
 
-    position = new_position;
-    mask = new_mask;
-
-    // System.err.println("Position: " + position);
-    // System.err.println("Mask: " + mask);
-
-    // B[row][col] = Player[currentPlayer];
-    // CXCell newc = new CXCell(row, col, Player[currentPlayer]);
     MC.add(col); // Add move to the history
 
     currentPlayer = !currentPlayer;
@@ -165,8 +149,6 @@ public class CXBitBoard {
       gameState = !currentPlayer ? -1 : 1;
     else if (MC.size() == Rows * Columns)
       gameState = 0;
-
-    return gameState;
   }
 
   /**
@@ -180,18 +162,8 @@ public class CXBitBoard {
     if (RP[col] == Rows - 1)
       AC.add(col);
 
-    long new_mask = mask ^ (1l << ((Rows + 1) * col + RP[col]));
-    long new_position = position ^ new_mask;
-    // System.err.println("New position: " + new_position);
-    // System.err.println("New mask: " + new_mask);
-
-    position = new_position;
-    mask = new_mask;
-
-    // [oldc.i][oldc.j] = CXCellState.FREE;
-    // [oldc.j]++;
-    // (RP[oldc.j] == 0)
-    // .add(oldc.j);
+    mask = mask ^ (1l << ((Rows + 1) * col + RP[col]));
+    position = position ^ mask;
 
     currentPlayer = !currentPlayer;
     gameState = 2; // Open
@@ -349,6 +321,6 @@ public class CXBitBoard {
   }
 
   public long hash() {
-    return position + mask + bottom;
+    return position + mask;
   }
 }
